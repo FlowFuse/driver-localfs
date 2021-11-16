@@ -69,10 +69,11 @@ function startProject(id, options, userDir, port) {
   env["FORGE_URL"] = process.env["BASE_URL"];
   env["BASE_URL"] = "http://localhost:" + port;
   env["FORGE_PROJECT_ID"] = id;
+  env["FORGE_PROJECT_TOKEN"] = options.projectToken || "ABCD";
   env["FORGE_STORAGE_URL"] = process.env["BASE_URL"] + "/storage";
-  env["FORGE_STORAGE_TOKEN"] = options.storageSecret || "foobar";
+  env["FORGE_STORAGE_TOKEN"] = options.projectToken || "ABCD";
   env["FORGE_AUDIT_URL"] = process.env["BASE_URL"] + "/logging";
-  env["FORGE_AUDIT_TOKEN"] = options.loggingSecret || "forbar";
+  env["FORGE_AUDIT_TOKEN"] = options.projectToken || "ABCD";
 
   console.log(env);
 
@@ -85,10 +86,12 @@ function startProject(id, options, userDir, port) {
   }
 
   //this needs work
-  let execPath = path.join(__dirname,"node_modules/.bin/node-red")
+  let execPath = path.join(__dirname,"node_modules/.bin/flowforge-node-red")
   if (!fs.existsSync(execPath)) {
-    execPath = path.join(__dirname,"../.bin/node-red")
+    execPath = path.join(__dirname,"../.bin/flowforge-node-red")
   }
+
+  console.log("exec path",execPath)
 
   let proc = childProcess.spawn(execPath,[
     '-u',
@@ -115,7 +118,7 @@ module.exports = {
     this._projects = {}
     this._usedPorts = []
     //TODO need a better way to find this location?
-    this._rootDir = process.env["LOCALFS_ROOT"] || path.join(__dirname, "../../../localfs_root")
+    this._rootDir = process.env["LOCALFS_ROOT"] || path.join(process.mainModule.path, "containers/localfs_root")
 
     require('./models/Project')(app.db)
 
@@ -225,7 +228,11 @@ module.exports = {
     let project = await this._app.db.models.LocalFSProject.byId(id);
 
     if (project) {
-      process.kill(project.pid,'SIGTERM')
+      try {
+        process.kill(project.pid,'SIGTERM')
+      } catch (err) {
+        //probably means already stopped
+      }
 
       setTimeout(() => {
         fs.rmdirSync(project.path,{recursive: true, force: true})
@@ -264,6 +271,18 @@ module.exports = {
       return Promise.resolve()
     }
     
+  },
+  /**
+   */
+  settings: async (id) => {
+    let project = await this._app.db.models.LocalFSProject.byId(id);
+    var settings = {}
+    if (project) {
+      settings.uiPort = project.port
+      settings.userDir = project.path
+    }
+
+    return settings
   },
   /**
    * Lists all containers
