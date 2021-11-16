@@ -86,9 +86,16 @@ function startProject(id, options, userDir, port) {
   }
 
   //this needs work
-  let execPath = path.join(__dirname,"node_modules/.bin/flowforge-node-red")
-  if (!fs.existsSync(execPath)) {
-    execPath = path.join(__dirname,"../.bin/flowforge-node-red")
+  let execPath = undefined;
+  for (let i=0; i<process.mainModule.paths.length; i++) {
+    execPath = path.join(process.mainModule.paths[i], ".bin/flowforge-node-red")
+    if (fs.existsSync(execPath)) {
+      break;
+    }
+  }
+  if (!execPath){
+    console.log("Can not find flowforge-node-red executable, no way to start projects")
+    process.exit(1)
   }
 
   console.log("exec path",execPath)
