@@ -105,10 +105,14 @@ function startProject(id, options, userDir, port) {
   console.log("exec path",execPath)
 
   let proc = childProcess.spawn(execPath,[
-    '-u',
-    userDir,
     '-p',
-    port
+    port,
+    '--forgeURL',
+    process.env["BASE_URL"],
+    '--project',
+    id,
+    '--token',
+    options.projectToken
     ],processOptions);
 
   proc.unref();
@@ -305,14 +309,14 @@ module.exports = {
         + "storageModule: require('@flowforge/nr-storage'), "
         + "httpStorage: { "
         + "projectID: '" + id + "', "
-        + "baseURL: '" + process.env["BASE_URL"] + "/storage" + ", " 
+        + "baseURL: '" + options.storageURL + ", " 
         + "token: '" + options.projectToken + "', "
         + " }, "
         + "logging: { "
         + "console: { level: 'info', metric: false, audit: false }, "
         + "auditLogger: { "
         + "level: 'off', audit: true, handler: require('@flowforge/nr-logger'), "
-        + "loggingURL: '" + process.env["BASE_URL"] + "/logging" + "', "
+        + "loggingURL: '" + options.auditURL + "', "
         + "projectID: '" + id + "', "
         + "token: '" + options.projectToken + "', "
         + " }"
