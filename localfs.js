@@ -106,7 +106,7 @@ function startProject(id, options, userDir, port) {
 
   let args = [
     '-p',
-    port,
+    port + 1000,
     '--forgeURL',
     process.env["BASE_URL"],
     '--project',
