@@ -104,7 +104,7 @@ function startProject(id, options, userDir, port) {
 
   console.log("exec path",execPath)
 
-  let proc = childProcess.spawn(execPath,[
+  let args = [
     '-p',
     port,
     '--forgeURL',
@@ -113,7 +113,11 @@ function startProject(id, options, userDir, port) {
     id,
     '--token',
     options.projectToken
-    ],processOptions);
+    ]
+
+  console.log(args)
+
+  let proc = childProcess.spawn(execPath,args,processOptions);
 
   proc.unref();
 
