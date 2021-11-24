@@ -115,8 +115,6 @@ function startProject(id, options, userDir, port) {
     options.projectToken
     ]
 
-  console.log(args)
-
   let proc = childProcess.spawn(execPath,args,processOptions);
 
   proc.unref();
@@ -309,7 +307,7 @@ module.exports = {
         + " forgeURL: '" + process.env["BASE_URL"] + "', "
         + " clientID: '" + options.clientID + "', "
         + " clientSecret: '" + options.clientSecret + "', "
-        + " })"
+        + " }),"
         + "storageModule: require('@flowforge/nr-storage'), "
         + "httpStorage: { "
         + "projectID: '" + id + "', "
