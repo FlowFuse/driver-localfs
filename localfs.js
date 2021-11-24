@@ -291,7 +291,6 @@ module.exports = {
    */
   settings: async (id) => {
     let project = await this._app.db.models.LocalFSProject.byId(id);
-    console.log("localfs settings project", project )
     let options = JSON.parse(project.options)
     var settings = {}
     if (project) {
