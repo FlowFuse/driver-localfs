@@ -193,7 +193,7 @@ module.exports = {
 
     let directory = path.join(this._rootDir, id)
     createUserDirIfNeeded(this._rootDir, id)
-    copySettingsJS(directory, path.join(__dirname,"settings.js"))
+    //copySettingsJS(directory, path.join(__dirname,"settings.js"))
 
     if (options.port && this._usedPorts.contains(port)) {
       // error port in use so set it zero to get the next
@@ -291,13 +291,14 @@ module.exports = {
    */
   settings: async (id) => {
     let project = await this._app.db.models.LocalFSProject.byId(id);
+    console.log("localfs settings project", project )
     let options = JSON.parse(project.options)
     var settings = {}
     if (project) {
       settings.rootDir = this._rootDir
       settings.userDir = id
       settings.port = project.port
-      settings: "module.exports = { "
+      settings.settings = "module.exports = { "
         + "flowFile: 'flows.json', " 
         + "flowFilePretty: true, "
         + "adminAuth: require('@flowforge/nr-auth')({ "
