@@ -77,9 +77,13 @@ function startProject(id, options, userDir, port) {
 
   console.log(env);
 
+  const out = fs.openSync(path.join(userDir,'/out.log'), 'a');
+  const err = fs.openSync(path.join(userDir,'/out.log'), 'a');
+
+
   let processOptions = {
     detached: true,
-    stdio: 'ignore',
+    stdio: ['ignore', out, err],
     windowsHide: true,
     env: env,
     cwd: userDir
@@ -88,7 +92,7 @@ function startProject(id, options, userDir, port) {
   //this needs work
   let execPath = undefined;
   for (let i=0; i<process.mainModule.paths.length; i++) {
-    execPath = path.join(process.mainModule.paths[i], ".bin/flowforge-node-red")
+    execPath = path.join(process.mainModule.paths[i], ".bin/test-node-red")
     if (fs.existsSync(execPath)) {
       break;
     }
@@ -242,7 +246,7 @@ module.exports = {
       }
 
       setTimeout(() => {
-        fs.rmdirSync(project.path,{recursive: true, force: true})
+        fs.rmSync(project.path,{recursive: true, force: true})
       }, 5000)
 
       project.destroy()
@@ -283,10 +287,38 @@ module.exports = {
    */
   settings: async (id) => {
     let project = await this._app.db.models.LocalFSProject.byId(id);
+    let options = JSON.parse(project.options)
     var settings = {}
     if (project) {
-      settings.uiPort = project.port
-      settings.userDir = project.path
+      settings.rootDir = this._rootDir
+      settings.userDir = id
+      settings.port = project.port
+      settings: "module.exports = { "
+        + "flowFile: 'flows.json', " 
+        + "flowFilePretty: true, "
+        + "adminAuth: require('@flowforge/nr-auth')({ "
+        + " baseURL: 'http://localhost:" + project.port + "', "
+        + " forgeURL: '" + process.env["BASE_URL"] + "', "
+        + " clientID: '" + options.clientID + "', "
+        + " clientSecret: '" + options.clientSecret + "', "
+        + " })"
+        + "storageModule: require('@flowforge/nr-storage'), "
+        + "httpStorage: { "
+        + "projectID: '" + id + "', "
+        + "baseURL: '" + process.env["BASE_URL"] + "/storage" + ", " 
+        + "token: '" + options.projectToken + "', "
+        + " }, "
+        + "logging: { "
+        + "console: { level: 'info', metric: false, audit: false }, "
+        + "auditLogger: { "
+        + "level: 'off', audit: true, handler: require('@flowforge/nr-logger'), "
+        + "loggingURL: '" + process.env["BASE_URL"] + "/logging" + "', "
+        + "projectID: '" + id + "', "
+        + "token: '" + options.projectToken + "', "
+        + " }"
+        + "}, "
+        + "editorTheme: { page: {title: 'FlowForge'}, header: {title: 'FlowForge'} } "
+        + "}"
     }
 
     return settings
