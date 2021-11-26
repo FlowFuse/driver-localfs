@@ -45,21 +45,23 @@ function createUserDirIfNeeded(rootDir, id) {
     console.log("creating userDir", userDir)
     fs.mkdirSync(userDir)
     fs.mkdirSync(path.join(userDir, "node_modules"))
-    // fs.writeFileSync(path.join(userDir, "package.json"), "")
+    fs.writeFileSync(path.join(userDir, "package.json"), 
+      '{\n"name": "node-red-project",\n"description": "A Node-RED Project",\n"version": "0.0.1",\n"private": true\n }'
+      )
   } else {
     console.log("userDir already exists", userDir)
   }
 }
 
-function copySettingsJS(userDir, settingsJSPath){
-  let target = path.join(userDir, "settings.js")
-  if (!fs.existsSync(target)) {
-    console.log("copying settings.js to ", userDir)
-    fs.copyFileSync(settingsJSPath, target)
-  } else {
-    console.log("existing settings.js in ", userDir)
-  }
-}
+// function copySettingsJS(userDir, settingsJSPath){
+//   let target = path.join(userDir, "settings.js")
+//   if (!fs.existsSync(target)) {
+//     console.log("copying settings.js to ", userDir)
+//     fs.copyFileSync(settingsJSPath, target)
+//   } else {
+//     console.log("existing settings.js in ", userDir)
+//   }
+// }
 
 function startProject(id, options, userDir, port) {
 
@@ -198,7 +200,6 @@ module.exports = {
 
     let directory = path.join(this._rootDir, id)
     createUserDirIfNeeded(this._rootDir, id)
-    //copySettingsJS(directory, path.join(__dirname,"settings.js"))
 
     if (options.port && this._usedPorts.contains(port)) {
       // error port in use so set it zero to get the next
