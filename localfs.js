@@ -361,11 +361,17 @@ module.exports = {
 
     let project = await this._app.db.models.LocalFSProject.byId(id)
 
-    let pid = startProject(id, JSON.parse(project.env), project.path, project.port)
+    await got.post("http://localhost:" + (project.port + 1000) + "/flowforge/command",{
+      json: {
+        cmd: "start"
+      }
+    })
+
+    // let pid = startProject(id, JSON.parse(project.env), project.path, project.port)
 
     project.pid = pid;
-    project.state = "running"
-    project.save()
+    project.state = "starting"
+    // project.save()
 
     return Promise.resolve({status: "okay"})
   },
@@ -378,7 +384,14 @@ module.exports = {
 
     let project = await this._app.db.models.LocalFSProject.byId(id)
 
-    process.kill(project.pid,'SIGTERM')
+    await got.post("http://localhost:" + (project.port + 1000) + "/flowforge/command",{
+      json: {
+        cmd: "stop"
+      }
+    })
+
+
+    // process.kill(project.pid,'SIGTERM')
 
     project.state = "stopped";
     project.save()
@@ -390,11 +403,20 @@ module.exports = {
    * @return {forge.Status}
    */
   restart: async (id) => {
-    let rep = await stop(id);
-    if (rep.status && rep.state === 'okay') {
-      return await start(id);
-    } else {
-      return rep
-    }
+    let project = await this._app.db.models.LocalFSProject.byId(id)
+
+    await got.post("http://localhost:" + (project.port + 1000) + "/flowforge/command",{
+      json: {
+        cmd: "restart"
+      }
+    })
+
+    return {state: "okay"}
+    // let rep = await stop(id);
+    // if (rep.status && rep.state === 'okay') {
+    //   return await start(id);
+    // } else {
+    //   return rep
+    // }
   }
 }
