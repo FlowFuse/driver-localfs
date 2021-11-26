@@ -12,6 +12,7 @@
 
 const fs = require('fs');
 const ps = require('ps');
+const got = require('got');
 const path = require('path');
 const childProcess = require('child_process');
 
@@ -43,6 +44,8 @@ function createUserDirIfNeeded(rootDir, id) {
   if (!fs.existsSync(userDir)) {
     console.log("creating userDir", userDir)
     fs.mkdirSync(userDir)
+    fs.mkdirSync(path.join(userDir, "node_modules"))
+    // fs.writeFileSync(path.join(userDir, "package.json"), "")
   } else {
     console.log("userDir already exists", userDir)
   }
@@ -276,6 +279,15 @@ module.exports = {
     * @return {Object}
     */
   details: async (id) => {
+
+    let infoURL = "http://localhost:"+ (this._projects[id].port + 1000) + "/flowforge/info"
+    try {
+      let info = await got(infoURL)
+      console.log(info)
+    } catch (err) {
+      //TODO
+    }
+
     if (this._projects[id]){
       let [proc] = await ps({pid:this._projects[id].process})
       if (proc) {
