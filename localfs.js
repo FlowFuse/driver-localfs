@@ -282,23 +282,23 @@ module.exports = {
 
     let infoURL = "http://localhost:"+ (this._projects[id].port + 1000) + "/flowforge/info"
     try {
-      let info = await got(infoURL)
-      console.log(info)
+      let info = (await got(infoURL)).body
+      return Promise.resolve(info)
     } catch (err) {
       //TODO
     }
 
-    if (this._projects[id]){
-      let [proc] = await ps({pid:this._projects[id].process})
-      if (proc) {
-        this._projects[id].state = "running"
-      } else {
-        this._projects[id].state = "stopped"
-      }
-      return Promise.resolve(this._projects[id])
-    } else {
-      return Promise.resolve()
-    }
+    // if (this._projects[id]){
+    //   let [proc] = await ps({pid:this._projects[id].process})
+    //   if (proc) {
+    //     this._projects[id].state = "running"
+    //   } else {
+    //     this._projects[id].state = "stopped"
+    //   }
+    //   return Promise.resolve(this._projects[id])
+    // } else {
+    //   return Promise.resolve()
+    // }
     
   },
   /**
