@@ -282,7 +282,7 @@ module.exports = {
 
     let infoURL = "http://localhost:"+ (this._projects[id].port + 1000) + "/flowforge/info"
     try {
-      let info = JSON.parse(await got.get(infoURL,)).body)
+      let info = JSON.parse((await got.get(infoURL)).body)
       return Promise.resolve(info)
     } catch (err) {
       //TODO
