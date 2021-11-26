@@ -53,16 +53,6 @@ function createUserDirIfNeeded(rootDir, id) {
   }
 }
 
-// function copySettingsJS(userDir, settingsJSPath){
-//   let target = path.join(userDir, "settings.js")
-//   if (!fs.existsSync(target)) {
-//     console.log("copying settings.js to ", userDir)
-//     fs.copyFileSync(settingsJSPath, target)
-//   } else {
-//     console.log("existing settings.js in ", userDir)
-//   }
-// }
-
 function startProject(id, options, userDir, port) {
 
   let env = {} //JSON.parse(JSON.stringify(process.env))
@@ -287,6 +277,7 @@ module.exports = {
       return Promise.resolve(info)
     } catch (err) {
       //TODO
+      return Promise.resolve()
     }
 
     // if (this._projects[id]){
@@ -369,7 +360,7 @@ module.exports = {
 
     // let pid = startProject(id, JSON.parse(project.env), project.path, project.port)
 
-    project.pid = pid;
+    // project.pid = pid;
     project.state = "starting"
     // project.save()
 
@@ -412,11 +403,5 @@ module.exports = {
     })
 
     return {state: "okay"}
-    // let rep = await stop(id);
-    // if (rep.status && rep.state === 'okay') {
-    //   return await start(id);
-    // } else {
-    //   return rep
-    // }
   }
 }
