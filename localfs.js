@@ -87,7 +87,7 @@ function startProject(id, options, userDir, port) {
   //this needs work
   let execPath = undefined;
   for (let i=0; i<process.mainModule.paths.length; i++) {
-    execPath = path.join(process.mainModule.paths[i], ".bin/test-node-red")
+    execPath = path.join(process.mainModule.paths[i], ".bin/flowforge-node-red")
     if (fs.existsSync(execPath)) {
       break;
     }
