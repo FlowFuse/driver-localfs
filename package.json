@@ -10,6 +10,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@flowforge/nr-launcher": "file:../flowforge-nr-launcher",
+    "got": "^11.8.3",
     "ps": "^1.0.0",
     "sequelize": "^6.9.0"
   }

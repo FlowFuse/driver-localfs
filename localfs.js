@@ -12,6 +12,7 @@
 
 const fs = require('fs');
 const ps = require('ps');
+const got = require('got');
 const path = require('path');
 const childProcess = require('child_process');
 
@@ -43,18 +44,12 @@ function createUserDirIfNeeded(rootDir, id) {
   if (!fs.existsSync(userDir)) {
     console.log("creating userDir", userDir)
     fs.mkdirSync(userDir)
+    fs.mkdirSync(path.join(userDir, "node_modules"))
+    fs.writeFileSync(path.join(userDir, "package.json"), 
+      '{\n"name": "node-red-project",\n"description": "A Node-RED Project",\n"version": "0.0.1",\n"private": true\n }'
+      )
   } else {
     console.log("userDir already exists", userDir)
-  }
-}
-
-function copySettingsJS(userDir, settingsJSPath){
-  let target = path.join(userDir, "settings.js")
-  if (!fs.existsSync(target)) {
-    console.log("copying settings.js to ", userDir)
-    fs.copyFileSync(settingsJSPath, target)
-  } else {
-    console.log("existing settings.js in ", userDir)
   }
 }
 
@@ -77,9 +72,13 @@ function startProject(id, options, userDir, port) {
 
   console.log(env);
 
+  const out = fs.openSync(path.join(userDir,'/out.log'), 'a');
+  const err = fs.openSync(path.join(userDir,'/out.log'), 'a');
+
+
   let processOptions = {
     detached: true,
-    stdio: 'ignore',
+    stdio: ['ignore', out, err],
     windowsHide: true,
     env: env,
     cwd: userDir
@@ -100,12 +99,18 @@ function startProject(id, options, userDir, port) {
 
   console.log("exec path",execPath)
 
-  let proc = childProcess.spawn(execPath,[
-    '-u',
-    userDir,
+  let args = [
     '-p',
-    port
-    ],processOptions);
+    port + 1000,
+    '--forgeURL',
+    process.env["BASE_URL"],
+    '--project',
+    id,
+    '--token',
+    options.projectToken
+    ]
+
+  let proc = childProcess.spawn(execPath,args,processOptions);
 
   proc.unref();
 
@@ -185,7 +190,6 @@ module.exports = {
 
     let directory = path.join(this._rootDir, id)
     createUserDirIfNeeded(this._rootDir, id)
-    copySettingsJS(directory, path.join(__dirname,"settings.js"))
 
     if (options.port && this._usedPorts.contains(port)) {
       // error port in use so set it zero to get the next
@@ -242,7 +246,7 @@ module.exports = {
       }
 
       setTimeout(() => {
-        fs.rmdirSync(project.path,{recursive: true, force: true})
+        fs.rmSync(project.path,{recursive: true, force: true})
       }, 5000)
 
       project.destroy()
@@ -266,27 +270,65 @@ module.exports = {
     * @return {Object}
     */
   details: async (id) => {
-    if (this._projects[id]){
-      let [proc] = await ps({pid:this._projects[id].process})
-      if (proc) {
-        this._projects[id].state = "running"
-      } else {
-        this._projects[id].state = "stopped"
-      }
-      return Promise.resolve(this._projects[id])
-    } else {
+
+    let infoURL = "http://localhost:"+ (this._projects[id].port + 1000) + "/flowforge/info"
+    try {
+      let info = JSON.parse((await got.get(infoURL)).body)
+      return Promise.resolve(info)
+    } catch (err) {
+      //TODO
       return Promise.resolve()
     }
+
+    // if (this._projects[id]){
+    //   let [proc] = await ps({pid:this._projects[id].process})
+    //   if (proc) {
+    //     this._projects[id].state = "running"
+    //   } else {
+    //     this._projects[id].state = "stopped"
+    //   }
+    //   return Promise.resolve(this._projects[id])
+    // } else {
+    //   return Promise.resolve()
+    // }
     
   },
   /**
    */
   settings: async (id) => {
     let project = await this._app.db.models.LocalFSProject.byId(id);
+    let options = JSON.parse(project.options)
     var settings = {}
     if (project) {
-      settings.uiPort = project.port
-      settings.userDir = project.path
+      settings.rootDir = this._rootDir
+      settings.userDir = id
+      settings.port = project.port
+      settings.settings = "module.exports = { "
+        + "flowFile: 'flows.json', " 
+        + "flowFilePretty: true, "
+        + "adminAuth: require('@flowforge/nr-auth')({ "
+        + " baseURL: 'http://localhost:" + project.port + "', "
+        + " forgeURL: '" + process.env["BASE_URL"] + "', "
+        + " clientID: '" + options.clientID + "', "
+        + " clientSecret: '" + options.clientSecret + "' "
+        + " }),"
+        + "storageModule: require('@flowforge/nr-storage'), "
+        + "httpStorage: { "
+        + "projectID: '" + id + "', "
+        + "baseURL: '" + options.storageURL + "', " 
+        + "token: '" + options.projectToken + "', "
+        + " }, "
+        + "logging: { "
+        + "console: { level: 'info', metric: false, audit: false }, "
+        + "auditLogger: { "
+        + "level: 'off', audit: true, handler: require('@flowforge/nr-logger'), "
+        + "loggingURL: '" + options.auditURL + "', "
+        + "projectID: '" + id + "', "
+        + "token: '" + options.projectToken + "' "
+        + " }"
+        + "}, "
+        + "editorTheme: { page: {title: 'FlowForge'}, header: {title: 'FlowForge'} } "
+        + "}"
     }
 
     return settings
@@ -310,11 +352,17 @@ module.exports = {
 
     let project = await this._app.db.models.LocalFSProject.byId(id)
 
-    let pid = startProject(id, JSON.parse(project.env), project.path, project.port)
+    await got.post("http://localhost:" + (project.port + 1000) + "/flowforge/command",{
+      json: {
+        cmd: "start"
+      }
+    })
 
-    project.pid = pid;
-    project.state = "running"
-    project.save()
+    // let pid = startProject(id, JSON.parse(project.env), project.path, project.port)
+
+    // project.pid = pid;
+    project.state = "starting"
+    // project.save()
 
     return Promise.resolve({status: "okay"})
   },
@@ -327,7 +375,14 @@ module.exports = {
 
     let project = await this._app.db.models.LocalFSProject.byId(id)
 
-    process.kill(project.pid,'SIGTERM')
+    await got.post("http://localhost:" + (project.port + 1000) + "/flowforge/command",{
+      json: {
+        cmd: "stop"
+      }
+    })
+
+
+    // process.kill(project.pid,'SIGTERM')
 
     project.state = "stopped";
     project.save()
@@ -339,11 +394,14 @@ module.exports = {
    * @return {forge.Status}
    */
   restart: async (id) => {
-    let rep = await stop(id);
-    if (rep.status && rep.state === 'okay') {
-      return await start(id);
-    } else {
-      return rep
-    }
+    let project = await this._app.db.models.LocalFSProject.byId(id)
+
+    await got.post("http://localhost:" + (project.port + 1000) + "/flowforge/command",{
+      json: {
+        cmd: "restart"
+      }
+    })
+
+    return {state: "okay"}
   }
 }
