@@ -59,16 +59,22 @@ function startProject(id, options, userDir, port) {
 
   Object.assign(env, options.env)
 
-  env["FORGE_CLIENT_ID"] = options.clientID;
-  env["FORGE_CLIENT_SECRET"] = options.clientSecret;
+  // env["FORGE_CLIENT_ID"] = options.clientID;
+  // env["FORGE_CLIENT_SECRET"] = options.clientSecret;
   env["FORGE_URL"] = process.env["BASE_URL"];
-  env["BASE_URL"] = "http://localhost:" + port;
+  // env["BASE_URL"] = "http://localhost:" + port;
   env["FORGE_PROJECT_ID"] = id;
   env["FORGE_PROJECT_TOKEN"] = options.projectToken || "ABCD";
-  env["FORGE_STORAGE_URL"] = process.env["BASE_URL"] + "/storage";
-  env["FORGE_STORAGE_TOKEN"] = options.projectToken || "ABCD";
-  env["FORGE_AUDIT_URL"] = process.env["BASE_URL"] + "/logging";
-  env["FORGE_AUDIT_TOKEN"] = options.projectToken || "ABCD";
+  // env["FORGE_STORAGE_URL"] = process.env["BASE_URL"] + "/storage";
+  // env["FORGE_STORAGE_TOKEN"] = options.projectToken || "ABCD";
+  // env["FORGE_AUDIT_URL"] = process.env["BASE_URL"] + "/logging";
+  // env["FORGE_AUDIT_TOKEN"] = options.projectToken || "ABCD";
+
+  if (process.env["LOCALFS_NODE_PATH"]) {
+    env["PATH"] = process.env["PATH"]+path.delimiter+process.env.LOCALFS_NODE_PATH
+  } else {
+    env["PATH"] = process.env["PATH"]
+  }
 
   console.log(env);
 
@@ -294,12 +300,14 @@ module.exports = {
     
   },
   /**
+   * Returns the settings for the project
    */
   settings: async (id) => {
     let project = await this._app.db.models.LocalFSProject.byId(id);
     let options = JSON.parse(project.options)
     var settings = {}
     if (project) {
+      settings.env = options.env
       settings.rootDir = this._rootDir
       settings.userDir = id
       settings.port = project.port
