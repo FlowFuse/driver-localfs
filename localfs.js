@@ -45,7 +45,7 @@ function createUserDirIfNeeded(rootDir, id) {
     console.log("creating userDir", userDir)
     fs.mkdirSync(userDir)
     fs.mkdirSync(path.join(userDir, "node_modules"))
-    fs.writeFileSync(path.join(userDir, "package.json"), 
+    fs.writeFileSync(path.join(userDir, "package.json"),
       '{\n"name": "node-red-project",\n"description": "A Node-RED Project",\n"version": "0.0.1",\n"private": true\n }'
       )
   } else {
@@ -58,7 +58,10 @@ function startProject(id, options, userDir, port) {
   let env = {} //JSON.parse(JSON.stringify(process.env))
 
   Object.assign(env, options.env)
-
+  
+  if (process.env.LOCALFS_NODE_PATH) {
+    env["PATH"] = process.env["PATH"]+path.delimiter+process.env.LOCALFS_NODE_PATH
+  }
   env["FORGE_CLIENT_ID"] = options.clientID;
   env["FORGE_CLIENT_SECRET"] = options.clientSecret;
   env["FORGE_URL"] = process.env["BASE_URL"];
@@ -198,7 +201,7 @@ module.exports = {
     var port = options.port || getNextFreePort(this._usedPorts);
 
     this._usedPorts.push(port);
-    
+
     let pid = startProject(id, options, directory, port)
     console.log("PID",pid, "port", port, "directory", directory)
 
@@ -291,7 +294,7 @@ module.exports = {
     // } else {
     //   return Promise.resolve()
     // }
-    
+
   },
   /**
    */
@@ -304,7 +307,7 @@ module.exports = {
       settings.userDir = id
       settings.port = project.port
       settings.settings = "module.exports = { "
-        + "flowFile: 'flows.json', " 
+        + "flowFile: 'flows.json', "
         + "flowFilePretty: true, "
         + "adminAuth: require('@flowforge/nr-auth')({ "
         + " baseURL: 'http://localhost:" + project.port + "', "
@@ -315,7 +318,7 @@ module.exports = {
         + "storageModule: require('@flowforge/nr-storage'), "
         + "httpStorage: { "
         + "projectID: '" + id + "', "
-        + "baseURL: '" + options.storageURL + "', " 
+        + "baseURL: '" + options.storageURL + "', "
         + "token: '" + options.projectToken + "', "
         + " }, "
         + "logging: { "
