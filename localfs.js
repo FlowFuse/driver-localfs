@@ -329,7 +329,7 @@ module.exports = {
         + "logging: { "
         + "console: { level: 'info', metric: false, audit: false }, "
         + "auditLogger: { "
-        + "level: 'off', audit: true, handler: require('@flowforge/nr-logger'), "
+        + "level: 'off', audit: true, handler: require('@flowforge/nr-audit-logger'), "
         + "loggingURL: '" + options.auditURL + "', "
         + "projectID: '" + id + "', "
         + "token: '" + options.projectToken + "' "
