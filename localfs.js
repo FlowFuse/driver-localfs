@@ -11,7 +11,7 @@
  */
 
 const fs = require('fs');
-const ps = require('ps');
+const ps = require('ps-node');
 const got = require('got');
 const path = require('path');
 const childProcess = require('child_process');
@@ -151,38 +151,40 @@ module.exports = {
     //console.log(projects)
 
     projects.forEach(async (project) => {
-      let [proc] = await ps({pid: project.pid})
+
       this._usedPorts.push(project.port)
-      console.log(proc)
-
       createUserDirIfNeeded(this._rootDir, project.id)
-      if (!proc) {
-        //need to restart here
-        this._usedPorts.push(project.port);
 
-        let projectOpts = JSON.parse(project.options)
+      let localProjects = this._projects
 
-        let pid = startProject(project.id, projectOpts, project.path, project.port);
-
-        project.pid = pid;
-        project.save();
-
-        this._projects[project.id] = {
-          process: pid,
-          dir: project.path,
-          port: project.port,
-          state: "running"
+      ps.lookup({pid: project.pid}, function(err, results){
+        if (!err) {
+          if (!results[0]) {
+            let projectOpts = JSON.parse(project.options)
+            let pid = startProject(project.id, projectOpts, project.path, project.port);
+            project.pid = pid;
+            project.save();
+            localProjects[project.id] = {
+              process: pid,
+              dir: project.path,
+              port: project.port,
+              state: "running"
+            }
+          } else {
+            //found
+            console.log("found", results[0])
+            if (results[0].arguments.includes('--forgeURL')) {
+              console.log("definate match")
+            }
+            localProjects[project.id] = {
+              process: project.pid,
+              dir: project.path,
+              port: project.port,
+              state: "running"
+            }
+          }
         }
-      } else {
-        //need to check if PID is actually Node-RED
-        //current best we can do with the ps node is check if process is node
-        this._projects[project.id] = {
-          process: project.pid,
-          dir: project.path,
-          port: project.port,
-          state: "running"
-        }
-      }
+      })
     })
 
     //nothing to expose at the moment
