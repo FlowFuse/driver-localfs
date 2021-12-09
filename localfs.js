@@ -91,9 +91,11 @@ function startProject(id, options, userDir, port) {
   }
 
   //this needs work
+  let ext = process.platform == "win32" ? ".cmd" : ""
+
   let execPath = undefined;
   for (let i=0; i<process.mainModule.paths.length; i++) {
-    execPath = path.join(process.mainModule.paths[i], ".bin/flowforge-node-red")
+    execPath = path.join(process.mainModule.paths[i], `.bin/flowforge-node-red${ext}`)
     if (fs.existsSync(execPath)) {
       break;
     }
@@ -136,7 +138,7 @@ module.exports = {
     this._projects = {}
     this._usedPorts = []
     //TODO need a better way to find this location?
-    this._rootDir = process.env["LOCALFS_ROOT"] || path.join(process.mainModule.path, "containers/localfs_root")
+    this._rootDir = path.resolve(process.env["LOCALFS_ROOT"] || path.join(process.mainModule.path, "containers/localfs_root"))
 
     require('./models/Project')(app.db)
 
