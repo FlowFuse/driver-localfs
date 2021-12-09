@@ -18,6 +18,8 @@ const childProcess = require('child_process');
 
 const initalPortNumber = 7000
 
+var fileHandles = {}
+
 function getNextFreePort(ports) {
   ports.sort((a,b) => {return a-b});
   let offset = ports[0];
@@ -81,6 +83,11 @@ function startProject(id, options, userDir, port) {
   const out = fs.openSync(path.join(userDir,'/out.log'), 'a');
   const err = fs.openSync(path.join(userDir,'/out.log'), 'a');
 
+
+  fileHandles[id] = {
+    out: out,
+    err: err
+  }
 
   let processOptions = {
     detached: true,
@@ -250,9 +257,19 @@ module.exports = {
 
     if (project) {
       try {
-        process.kill(project.pid,'SIGTERM')
+        if (process.platform === 'win32') {
+          childProcess.exec(`taskkill /pid ${project.pid} /T /F`)
+        } else {
+          process.kill(project.pid,'SIGTERM')
+        }
       } catch (err) {
         //probably means already stopped
+      }
+
+      if (fileHandles[id]) {
+          fs.close(fileHandles[id].out)
+          fs.close(fileHandles[id].err)
+          delete fileHandles[id]
       }
 
       setTimeout(() => {
