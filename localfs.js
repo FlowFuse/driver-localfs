@@ -309,37 +309,22 @@ module.exports = {
     let options = JSON.parse(project.options)
     var settings = {}
     if (project) {
+      // TODO: some of this options should be centralised into the core model
+      settings.projectID = id
       settings.env = options.env
       settings.rootDir = this._rootDir
       settings.userDir = id
       settings.port = project.port
-      settings.settings = "module.exports = { "
-        + "flowFile: 'flows.json', "
-        + "flowFilePretty: true, "
-        + "adminAuth: require('@flowforge/nr-auth')({ "
-        + " baseURL: 'http://localhost:" + project.port + "', "
-        + " forgeURL: '" + process.env["BASE_URL"] + "', "
-        + " clientID: '" + options.clientID + "', "
-        + " clientSecret: '" + options.clientSecret + "' "
-        + " }),"
-        + "storageModule: require('@flowforge/nr-storage'), "
-        + "httpStorage: { "
-        + "projectID: '" + id + "', "
-        + "baseURL: '" + options.storageURL + "', "
-        + "token: '" + options.projectToken + "', "
-        + " }, "
-        + "logging: { "
-        + "console: { level: 'info', metric: false, audit: false }, "
-        + "auditLogger: { "
-        + "level: 'off', audit: true, handler: require('@flowforge/nr-audit-logger'), "
-        + "loggingURL: '" + options.auditURL + "', "
-        + "projectID: '" + id + "', "
-        + "token: '" + options.projectToken + "' "
-        + " }"
-        + "}, "
-        + "editorTheme: { page: {title: 'FlowForge'}, header: {title: 'FlowForge'} } "
-        + "}"
+      settings.baseURL = `http://localhost:${project.port}`
+      settings.forgeURL = process.env["BASE_URL"]
+      settings.clientID = options.clientID
+      settings.clientSecret = options.clientSecret
+      settings.storageURL = options.storageURL
+      settings.projectToken = options.projectToken
+      settings.auditURL = options.auditURL
     }
+    // settings.state is set by the core forge app before this returns to
+    // the launcher
 
     return settings
   },
