@@ -11,12 +11,14 @@
  */
 
 const fs = require('fs');
-const ps = require('ps');
+const ps = require('ps-node');
 const got = require('got');
 const path = require('path');
 const childProcess = require('child_process');
 
 const initalPortNumber = 7000
+
+var fileHandles = {}
 
 function getNextFreePort(ports) {
   ports.sort((a,b) => {return a-b});
@@ -81,6 +83,11 @@ function startProject(id, options, userDir, port) {
   const out = fs.openSync(path.join(userDir,'/out.log'), 'a');
   const err = fs.openSync(path.join(userDir,'/out.log'), 'a');
 
+
+  fileHandles[id] = {
+    out: out,
+    err: err
+  }
 
   let processOptions = {
     detached: true,
@@ -151,38 +158,40 @@ module.exports = {
     //console.log(projects)
 
     projects.forEach(async (project) => {
-      let [proc] = await ps({pid: project.pid})
+
       this._usedPorts.push(project.port)
-      console.log(proc)
-
       createUserDirIfNeeded(this._rootDir, project.id)
-      if (!proc) {
-        //need to restart here
-        this._usedPorts.push(project.port);
 
-        let projectOpts = JSON.parse(project.options)
+      let localProjects = this._projects
 
-        let pid = startProject(project.id, projectOpts, project.path, project.port);
-
-        project.pid = pid;
-        project.save();
-
-        this._projects[project.id] = {
-          process: pid,
-          dir: project.path,
-          port: project.port,
-          state: "running"
+      ps.lookup({pid: project.pid}, function(err, results){
+        if (!err) {
+          if (!results[0]) {
+            let projectOpts = JSON.parse(project.options)
+            let pid = startProject(project.id, projectOpts, project.path, project.port);
+            project.pid = pid;
+            project.save();
+            localProjects[project.id] = {
+              process: pid,
+              dir: project.path,
+              port: project.port,
+              state: "running"
+            }
+          } else {
+            //found
+            console.log("found", results[0])
+            if (results[0].arguments.includes('--forgeURL')) {
+              console.log("definate match")
+            }
+            localProjects[project.id] = {
+              process: project.pid,
+              dir: project.path,
+              port: project.port,
+              state: "running"
+            }
+          }
         }
-      } else {
-        //need to check if PID is actually Node-RED
-        //current best we can do with the ps node is check if process is node
-        this._projects[project.id] = {
-          process: project.pid,
-          dir: project.path,
-          port: project.port,
-          state: "running"
-        }
-      }
+      })
     })
 
     //nothing to expose at the moment
@@ -248,9 +257,19 @@ module.exports = {
 
     if (project) {
       try {
-        process.kill(project.pid,'SIGTERM')
+        if (process.platform === 'win32') {
+          childProcess.exec(`taskkill /pid ${project.pid} /T /F`)
+        } else {
+          process.kill(project.pid,'SIGTERM')
+        }
       } catch (err) {
         //probably means already stopped
+      }
+
+      if (fileHandles[id]) {
+          fs.close(fileHandles[id].out)
+          fs.close(fileHandles[id].err)
+          delete fileHandles[id]
       }
 
       setTimeout(() => {

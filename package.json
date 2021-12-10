@@ -11,7 +11,7 @@
   "dependencies": {
     "@flowforge/nr-launcher": "file:../flowforge-nr-launcher",
     "got": "^11.8.3",
-    "ps": "^1.0.0",
+    "ps-node": "^0.1.6",
     "sequelize": "^6.9.0"
   }
 }
