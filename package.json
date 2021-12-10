@@ -1,13 +1,23 @@
 {
   "name": "@flowforge/localfs",
   "version": "0.0.1",
-  "description": "Local Filesystem FlowForge driver",
+  "description": "Local Filesystem FlowForge Project driver",
   "main": "localfs.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "ben@flowforge.com",
-  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flowforge/flowforge-driver-localfs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/flowforge/flowforge-driver-localfs/issues"
+  },
+  "homepage": "https://github.com/flowforge/flowforge-driver-localfs#readme",
+  "author": {
+    "name": "FlowFlow Inc."
+  },
+  "license": "SEE LICENSE IN ./LICENSE",
   "dependencies": {
     "@flowforge/nr-launcher": "file:../flowforge-nr-launcher",
     "got": "^11.8.3",
