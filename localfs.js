@@ -16,7 +16,7 @@ const got = require('got');
 const path = require('path');
 const childProcess = require('child_process');
 
-const initalPortNumber = 7000
+const initalPortNumber = process.env["LOCALFS_START_PORT"] || 7880
 
 var fileHandles = {}
 
