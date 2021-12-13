@@ -55,18 +55,20 @@ function createUserDirIfNeeded(rootDir, id) {
   }
 }
 
-function startProject(id, options, userDir, port) {
+async function startProject(project, options, userDir, port) {
 
   let env = {} //JSON.parse(JSON.stringify(process.env))
 
   Object.assign(env, options.env)
 
-  // env["FORGE_CLIENT_ID"] = options.clientID;
-  // env["FORGE_CLIENT_SECRET"] = options.clientSecret;
+  const authTokens = await project.refreshAuthTokens();
+
+  env["FORGE_CLIENT_ID"] = authTokens.clientID;
+  env["FORGE_CLIENT_SECRET"] = authTokens.clientSecret;
   env["FORGE_URL"] = process.env["BASE_URL"];
-  // env["BASE_URL"] = "http://localhost:" + port;
-  env["FORGE_PROJECT_ID"] = id;
-  env["FORGE_PROJECT_TOKEN"] = options.projectToken || "ABCD";
+  env["FORGE_PROJECT_ID"] = project.id;
+  env["FORGE_PROJECT_TOKEN"] = authTokens.token;
+
   // env["FORGE_STORAGE_URL"] = process.env["BASE_URL"] + "/storage";
   // env["FORGE_STORAGE_TOKEN"] = options.projectToken || "ABCD";
   // env["FORGE_AUDIT_URL"] = process.env["BASE_URL"] + "/logging";
@@ -84,7 +86,7 @@ function startProject(id, options, userDir, port) {
   const err = fs.openSync(path.join(userDir,'/out.log'), 'a');
 
 
-  fileHandles[id] = {
+  fileHandles[project.id] = {
     out: out,
     err: err
   }
@@ -120,9 +122,9 @@ function startProject(id, options, userDir, port) {
     '--forgeURL',
     process.env["BASE_URL"],
     '--project',
-    id,
-    '--token',
-    options.projectToken
+    project.id,
+    // '--token',
+    // options.projectToken
     ]
 
   let proc = childProcess.spawn(execPath,args,processOptions);
@@ -147,30 +149,26 @@ module.exports = {
     //TODO need a better way to find this location?
     this._rootDir = path.resolve(process.env["LOCALFS_ROOT"] || path.join(process.mainModule.path, "containers/localfs_root"))
 
-    require('./models/Project')(app.db)
-
     if (!fs.existsSync(this._rootDir)) {
       fs.mkdirSync(this._rootDir)
     }
 
     //TODO need to check DB and see if the pids exist
-    let projects = await this._app.db.models.LocalFSProject.findAll()
+    let projects = await this._app.db.models.Project.findAll()
     //console.log(projects)
 
     projects.forEach(async (project) => {
-
-      this._usedPorts.push(project.port)
+      const projectSettings = await project.getAllSettings();
+      this._usedPorts.push(projectSettings.port)
       createUserDirIfNeeded(this._rootDir, project.id)
 
       let localProjects = this._projects
-
-      ps.lookup({pid: project.pid}, function(err, results){
+      ps.lookup({pid: projectSettings.pid}, async function(err, results){
         if (!err) {
           if (!results[0]) {
-            let projectOpts = JSON.parse(project.options)
-            let pid = startProject(project.id, projectOpts, project.path, project.port);
-            project.pid = pid;
-            project.save();
+            // let projectOpts = JSON.parse(project.options)
+            let pid = await startProject(project, {}, projectSettings.path, projectSettings.port);
+            await project.updateSetting('pid',pid);
             localProjects[project.id] = {
               process: pid,
               dir: project.path,
@@ -181,12 +179,12 @@ module.exports = {
             //found
             console.log("found", results[0])
             if (results[0].arguments.includes('--forgeURL')) {
-              console.log("definate match")
+              console.log("definite match")
             }
             localProjects[project.id] = {
-              process: project.pid,
-              dir: project.path,
-              port: project.port,
+              process: projectSettings.pid,
+              dir: projectSettings.path,
+              port: projectSettings.port,
               state: "running"
             }
           }
@@ -199,68 +197,50 @@ module.exports = {
   },
    /**
    * Create a new Project
-   * @param {string} id - id for the project
+   * @param {Project} project - the project model instance
    * @param {forge.containers.Options} options - options for the project
    * @return {forge.containers.Project}
    */
-  create: async (id, options) => {
+  create: async (project, options) => {
 
-    let directory = path.join(this._rootDir, id)
-    createUserDirIfNeeded(this._rootDir, id)
+    let directory = path.join(this._rootDir, project.id)
+    createUserDirIfNeeded(this._rootDir, project.id)
 
-    if (options.port && this._usedPorts.contains(port)) {
-      // error port in use so set it zero to get the next
-      options.port = 0
-    }
-    var port = options.port || getNextFreePort(this._usedPorts);
-
+    const port = getNextFreePort(this._usedPorts);
     this._usedPorts.push(port);
 
-    let pid = startProject(id, options, directory, port)
+    let pid = await startProject(project, options, directory, port)
     console.log("PID",pid, "port", port, "directory", directory)
 
-    await this._app.db.models.LocalFSProject.create({
-      id: id,
-      pid: pid,
-      path: directory,
-      port: port,
-      state: "running",
-      options: options ? JSON.stringify(options): "{}"
+    await project.updateSettings({
+        pid: pid,
+        path: directory,
+        port: port,
     })
 
-    this._projects[id] = {
+    project.url = "http://localhost:" + port;
+    await project.save()
+
+    this._projects[project.id] = {
       process: pid,
       dir: directory,
       port: port,
       state: "running"
     }
-
-    // proc.unref();
-
-    return Promise.resolve({
-      id: id,
-      status: "okay",
-      url: "http://localhost:" + port,
-      meta: {
-        port: port
-      }
-    })
+    return
   },
   /**
    * Removes a Project
-   * @param {string} id - id of project to remove
+   * @param {Project} project - the project model instance
    * @return {Object}
    */
-  remove: async (id) => {
-
-    let project = await this._app.db.models.LocalFSProject.byId(id);
-
-    if (project) {
+  remove: async (project) => {
+      const projectSettings = await project.getAllSettings()
       try {
         if (process.platform === 'win32') {
-          childProcess.exec(`taskkill /pid ${project.pid} /T /F`)
+          childProcess.exec(`taskkill /pid ${projectSettings.pid} /T /F`)
         } else {
-          process.kill(project.pid,'SIGTERM')
+          process.kill(projectSettings.pid,'SIGTERM')
         }
       } catch (err) {
         //probably means already stopped
@@ -273,74 +253,45 @@ module.exports = {
       }
 
       setTimeout(() => {
-        fs.rmSync(project.path,{recursive: true, force: true})
+        fs.rmSync(projectSettings.path,{recursive: true, force: true})
       }, 5000)
 
-      project.destroy()
 
       delete this._projects[id]
 
-      return Promise.resolve({
-        status: "okay"
-      })
-    } else {
-      return Promise.reject({
-        err: "project not found"
-      })
-    }
-
-
+      return { status: "okay" }
   },
   /**
     * Retrieves details of a project's container
-    * @param {string} id - id of project to query
+    * @param {Project} project - the project model instance
     * @return {Object}
     */
-  details: async (id) => {
-
-    let infoURL = "http://localhost:"+ (this._projects[id].port + 1000) + "/flowforge/info"
+  details: async (project) => {
+    const port = await project.getSetting('port')
+    let infoURL = "http://localhost:"+ (port + 1000) + "/flowforge/info"
     try {
       let info = JSON.parse((await got.get(infoURL)).body)
-      return Promise.resolve(info)
+      return info
     } catch (err) {
       //TODO
-      return Promise.resolve()
+      return
     }
-
-    // if (this._projects[id]){
-    //   let [proc] = await ps({pid:this._projects[id].process})
-    //   if (proc) {
-    //     this._projects[id].state = "running"
-    //   } else {
-    //     this._projects[id].state = "stopped"
-    //   }
-    //   return Promise.resolve(this._projects[id])
-    // } else {
-    //   return Promise.resolve()
-    // }
-
   },
   /**
    * Returns the settings for the project
+   * @param {Project} project - the project model instance
    */
-  settings: async (id) => {
-    let project = await this._app.db.models.LocalFSProject.byId(id);
-    let options = JSON.parse(project.options)
+  settings: async (project) => {
     var settings = {}
     if (project) {
-      // TODO: some of this options should be centralised into the core model
-      settings.projectID = id
-      settings.env = options.env
+      const projectSettings = await project.getAllSettings()
+      settings.projectID = project.id
+      // settings.env = options.env
       settings.rootDir = this._rootDir
-      settings.userDir = id
-      settings.port = project.port
-      settings.baseURL = `http://localhost:${project.port}`
+      settings.userDir = project.id
+      settings.port = projectSettings.port
+      settings.baseURL = `http://localhost:${projectSettings.port}`
       settings.forgeURL = process.env["BASE_URL"]
-      settings.clientID = options.clientID
-      settings.clientSecret = options.clientSecret
-      settings.storageURL = options.storageURL
-      settings.projectToken = options.projectToken
-      settings.auditURL = options.auditURL
     }
     // settings.state is set by the core forge app before this returns to
     // the launcher
@@ -354,63 +305,53 @@ module.exports = {
    */
   list: async (filter) => {
     //TODO work out what filtering needs to be done
-    let projects = await this._app.db.models.LocalFSProject.findAll();
+    let projects = await this._app.db.models.Project.findAll();
     return projects;
   },
   /**
    * Starts a Project's container
-   * @param {string} id - id of project to start
+   * @param {Project} project - the project model instance
    * @return {forge.Status}
    */
-  start: async (id) => {
+  start: async (project) => {
+    const port = await project.getSetting('port')
 
-    let project = await this._app.db.models.LocalFSProject.byId(id)
-
-    await got.post("http://localhost:" + (project.port + 1000) + "/flowforge/command",{
+    await got.post("http://localhost:" + (port + 1000) + "/flowforge/command",{
       json: {
         cmd: "start"
       }
     })
 
-    // let pid = startProject(id, JSON.parse(project.env), project.path, project.port)
-
-    // project.pid = pid;
     project.state = "starting"
-    // project.save()
 
-    return Promise.resolve({status: "okay"})
+    return {status: "okay"}
   },
   /**
    * Stop a Project's container
-   * @param {string} id - id of project to stop
+   * @param {Project} project - the project model instance
    * @return {forge.Status}
    */
-  stop: async (id) => {
-
-    let project = await this._app.db.models.LocalFSProject.byId(id)
-
-    await got.post("http://localhost:" + (project.port + 1000) + "/flowforge/command",{
+  stop: async (project) => {
+    const port = await project.getSetting('port')
+    await got.post("http://localhost:" + (port + 1000) + "/flowforge/command",{
       json: {
         cmd: "stop"
       }
     })
-
-
     // process.kill(project.pid,'SIGTERM')
-
     project.state = "stopped";
     project.save()
     return Promise.resolve({status: "okay"})
   },
   /**
    * Restarts a Project's container
-   * @param {string} id - id of project to restart
+   * @param {Project} project - the project model instance
    * @return {forge.Status}
    */
   restart: async (id) => {
-    let project = await this._app.db.models.LocalFSProject.byId(id)
+    const port = await project.getSetting('port')
 
-    await got.post("http://localhost:" + (project.port + 1000) + "/flowforge/command",{
+    await got.post("http://localhost:" + (port + 1000) + "/flowforge/command",{
       json: {
         cmd: "restart"
       }
@@ -421,12 +362,12 @@ module.exports = {
 
   /**
    * Get a Project's logs
-   * @param {string} id - id of project
+   * @param {Project} project - the project model instance
    * @return {array} logs
    */
-  logs: async (id) => {
-    let project = await this._app.db.models.LocalFSProject.byId(id)
-    let result = await got.get("http://localhost:" + (project.port + 1000) + "/flowforge/logs").json()
+  logs: async (project) => {
+    const port = await project.getSetting('port')
+    let result = await got.get("http://localhost:" + (port + 1000) + "/flowforge/logs").json()
     return result;
   }
 }
