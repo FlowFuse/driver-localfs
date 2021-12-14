@@ -348,7 +348,7 @@ module.exports = {
    * @param {Project} project - the project model instance
    * @return {forge.Status}
    */
-  restart: async (id) => {
+  restart: async (project) => {
     const port = await project.getSetting('port')
 
     await got.post("http://localhost:" + (port + 1000) + "/flowforge/command",{
