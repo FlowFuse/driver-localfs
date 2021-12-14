@@ -246,10 +246,10 @@ module.exports = {
         //probably means already stopped
       }
 
-      if (fileHandles[id]) {
-          fs.close(fileHandles[id].out)
-          fs.close(fileHandles[id].err)
-          delete fileHandles[id]
+      if (fileHandles[project.id]) {
+          fs.close(fileHandles[project.id].out)
+          fs.close(fileHandles[project.id].err)
+          delete fileHandles[project.id]
       }
 
       setTimeout(() => {
@@ -257,7 +257,7 @@ module.exports = {
       }, 5000)
 
 
-      delete this._projects[id]
+      delete this._projects[project.id]
 
       return { status: "okay" }
   },
