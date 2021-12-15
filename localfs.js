@@ -230,7 +230,10 @@ module.exports = {
         port: port,
     })
 
-    project.url = "http://localhost:" + port;
+    let baseURL = new URL(process.env['BASE_URL'])
+    base.port = port
+
+    project.url = baseURL.href; //"http://localhost:" + port;
     await project.save()
 
     this._projects[project.id] = {
@@ -302,7 +305,9 @@ module.exports = {
       settings.rootDir = this._rootDir
       settings.userDir = project.id
       settings.port = projectSettings.port
-      settings.baseURL = `http://localhost:${projectSettings.port}`
+      let baseURL = new URL(process.env['BASE_URL'])
+      baseURL.port = projectSettings.port
+      settings.baseURL = baseURL.href //`http://localhost:${projectSettings.port}`
       settings.forgeURL = process.env["BASE_URL"]
     }
     // settings.state is set by the core forge app before this returns to
