@@ -178,14 +178,26 @@ module.exports = {
           } else {
             //found
             console.log("found", results[0])
-            if (results[0].arguments.includes('--forgeURL')) {
-              console.log("definite match")
-            }
-            localProjects[project.id] = {
-              process: projectSettings.pid,
-              dir: projectSettings.path,
-              port: projectSettings.port,
-              state: "running"
+            if (results[0].arguments.includes('--forgeURL') &&
+                results[0].arguments.includes(project.id)) {
+              //should maybe hit the /flowforge/info endpoint
+              localProjects[project.id] = {
+                process: projectSettings.pid,
+                dir: projectSettings.path,
+                port: projectSettings.port,
+                state: "running"
+              }
+            } else {
+              console.log("matching pid, but doesn't match project id")
+              //should restart
+              let pid = await startProject(project, {}, projectSettings.path, projectSettings.port);
+              await project.updateSetting('pid',pid);
+              localProjects[project.id] = {
+                process: pid,
+                dir: project.path,
+                port: project.port,
+                state: "running"
+              }
             }
           }
         }
