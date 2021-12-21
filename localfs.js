@@ -271,6 +271,7 @@ module.exports = {
         fs.rmSync(projectSettings.path,{recursive: true, force: true})
       }, 5000)
 
+      this._usedPorts = this._usedPorts.filter( item => item != this._projects[project.id].port)
 
       delete this._projects[project.id]
 
@@ -307,7 +308,7 @@ module.exports = {
       settings.port = projectSettings.port
       let baseURL = new URL(process.env['BASE_URL'])
       baseURL.port = projectSettings.port
-      settings.baseURL = baseURL.href //`http://localhost:${projectSettings.port}`
+      settings.baseURL = baseURL.href.slice(0,-1) //`http://localhost:${projectSettings.port}`
       settings.forgeURL = process.env["BASE_URL"]
     }
     // settings.state is set by the core forge app before this returns to
