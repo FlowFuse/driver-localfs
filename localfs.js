@@ -231,7 +231,7 @@ module.exports = {
     })
 
     let baseURL = new URL(process.env['BASE_URL'])
-    base.port = port
+    baseURL.port = port
 
     project.url = baseURL.href; //"http://localhost:" + port;
     await project.save()
