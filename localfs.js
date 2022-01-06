@@ -65,7 +65,7 @@ async function startProject(project, options, userDir, port) {
 
   env["FORGE_CLIENT_ID"] = authTokens.clientID;
   env["FORGE_CLIENT_SECRET"] = authTokens.clientSecret;
-  env["FORGE_URL"] = process.env["BASE_URL"];
+  env["FORGE_URL"] = process.env["API_URL"];
   env["FORGE_PROJECT_ID"] = project.id;
   env["FORGE_PROJECT_TOKEN"] = authTokens.token;
 
