@@ -17,7 +17,7 @@
   "author": {
     "name": "FlowFlow Inc."
   },
-  "license": "SEE LICENSE IN ./LICENSE",
+  "license": "Apache-2.0",
   "dependencies": {
     "@flowforge/nr-launcher": "file:../flowforge-nr-launcher",
     "got": "^11.8.3",
