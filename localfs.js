@@ -20,6 +20,8 @@ const initalPortNumber = process.env["LOCALFS_START_PORT"] || 7880
 
 var fileHandles = {}
 
+var logger
+
 function getNextFreePort(ports) {
   ports.sort((a,b) => {return a-b});
   let offset = ports[0];
@@ -44,14 +46,14 @@ function getNextFreePort(ports) {
 function createUserDirIfNeeded(rootDir, id) {
   let userDir = path.join(rootDir, id)
   if (!fs.existsSync(userDir)) {
-    console.log("creating userDir", userDir)
+    logger.info(`Creating userDir ${userDir}`)
     fs.mkdirSync(userDir)
     fs.mkdirSync(path.join(userDir, "node_modules"))
     fs.writeFileSync(path.join(userDir, "package.json"),
       '{\n"name": "node-red-project",\n"description": "A Node-RED Project",\n"version": "0.0.1",\n"private": true\n }'
       )
   } else {
-    console.log("userDir already exists", userDir)
+    logger.debug(`userDir already exists ${userDir}`)
   }
 }
 
@@ -80,7 +82,7 @@ async function startProject(project, options, userDir, port) {
     env["PATH"] = process.env["PATH"]
   }
 
-  console.log(env);
+  logger.debug(`Project Environment Vars ${JSON.stringify(env)}`)
 
   const out = fs.openSync(path.join(userDir,'/out.log'), 'a');
   const err = fs.openSync(path.join(userDir,'/out.log'), 'a');
@@ -110,11 +112,11 @@ async function startProject(project, options, userDir, port) {
     }
   }
   if (!execPath){
-    console.log("Can not find flowforge-node-red executable, no way to start projects")
+    logger.info("Can not find flowforge-node-red executable, no way to start projects")
     process.exit(1)
   }
 
-  console.log("exec path",execPath)
+  logger.debug(`exec path ${execPath}`)
 
   let args = [
     '-p',
@@ -134,6 +136,59 @@ async function startProject(project, options, userDir, port) {
   return proc.pid;
 }
 
+function checkExistingProjects(driver, projects) {
+
+  logger.debug("checking projects")
+
+    projects.forEach(async (project) => {
+      const projectSettings = await project.getAllSettings();
+      driver._usedPorts.push(projectSettings.port)
+      createUserDirIfNeeded(driver._rootDir, project.id)
+
+      let localProjects = driver._projects
+      ps.lookup({pid: projectSettings.pid}, async function(err, results){
+        if (!err) {
+          if (!results[0]) {
+            // let projectOpts = JSON.parse(project.options)
+            logger.info(`restating ${project.id}}`)
+            let pid = await startProject(project, {}, projectSettings.path, projectSettings.port);
+            await project.updateSetting('pid',pid);
+            localProjects[project.id] = {
+              process: pid,
+              dir: project.path,
+              port: project.port,
+              state: "running"
+            }
+          } else {
+            //found
+            logger.debug(`found ${results[0].pid}`)
+            if (results[0].arguments.includes('--forgeURL') &&
+                results[0].arguments.includes(project.id)) {
+              //should maybe hit the /flowforge/info endpoint
+              localProjects[project.id] = {
+                process: projectSettings.pid,
+                dir: projectSettings.path,
+                port: projectSettings.port,
+                state: "running"
+              }
+            } else {
+              logger.info("matching pid, but doesn't match project id, restarting")
+              //should restart
+              let pid = await startProject(project, {}, projectSettings.path, projectSettings.port);
+              await project.updateSetting('pid',pid);
+              localProjects[project.id] = {
+                process: pid,
+                dir: project.path,
+                port: project.port,
+                state: "running"
+              }
+            }
+          }
+        }
+      })
+    })
+}
+
 module.exports = {
   /**
    * Initialises this driver
@@ -149,60 +204,69 @@ module.exports = {
     //TODO need a better way to find this location?
     this._rootDir = path.resolve(process.env["LOCALFS_ROOT"] || path.join(process.mainModule.path, "containers/localfs_root"))
 
+    logger = app.log
+
     if (!fs.existsSync(this._rootDir)) {
       fs.mkdirSync(this._rootDir)
     }
 
     //TODO need to check DB and see if the pids exist
     let projects = await this._app.db.models.Project.findAll()
-    //console.log(projects)
 
-    projects.forEach(async (project) => {
-      const projectSettings = await project.getAllSettings();
-      this._usedPorts.push(projectSettings.port)
-      createUserDirIfNeeded(this._rootDir, project.id)
+    checkExistingProjects(this, projects)
+    const driver = this
 
-      let localProjects = this._projects
-      ps.lookup({pid: projectSettings.pid}, async function(err, results){
-        if (!err) {
-          if (!results[0]) {
-            // let projectOpts = JSON.parse(project.options)
-            let pid = await startProject(project, {}, projectSettings.path, projectSettings.port);
-            await project.updateSetting('pid',pid);
-            localProjects[project.id] = {
-              process: pid,
-              dir: project.path,
-              port: project.port,
-              state: "running"
-            }
-          } else {
-            //found
-            console.log("found", results[0])
-            if (results[0].arguments.includes('--forgeURL') &&
-                results[0].arguments.includes(project.id)) {
-              //should maybe hit the /flowforge/info endpoint
-              localProjects[project.id] = {
-                process: projectSettings.pid,
-                dir: projectSettings.path,
-                port: projectSettings.port,
-                state: "running"
-              }
-            } else {
-              console.log("matching pid, but doesn't match project id")
-              //should restart
-              let pid = await startProject(project, {}, projectSettings.path, projectSettings.port);
-              await project.updateSetting('pid',pid);
-              localProjects[project.id] = {
-                process: pid,
-                dir: project.path,
-                port: project.port,
-                state: "running"
-              }
-            }
-          }
-        }
-      })
-    })
+    setInterval(async ()=> {
+      let projects = await driver._app.db.models.Project.findAll()
+      checkExistingProjects(driver,projects)
+    }, 60000)
+
+    // projects.forEach(async (project) => {
+    //   const projectSettings = await project.getAllSettings();
+    //   this._usedPorts.push(projectSettings.port)
+    //   createUserDirIfNeeded(this._rootDir, project.id)
+
+    //   let localProjects = this._projects
+    //   ps.lookup({pid: projectSettings.pid}, async function(err, results){
+    //     if (!err) {
+    //       if (!results[0]) {
+    //         // let projectOpts = JSON.parse(project.options)
+    //         let pid = await startProject(project, {}, projectSettings.path, projectSettings.port);
+    //         await project.updateSetting('pid',pid);
+    //         localProjects[project.id] = {
+    //           process: pid,
+    //           dir: project.path,
+    //           port: project.port,
+    //           state: "running"
+    //         }
+    //       } else {
+    //         //found
+    //         console.log("found", results[0])
+    //         if (results[0].arguments.includes('--forgeURL') &&
+    //             results[0].arguments.includes(project.id)) {
+    //           //should maybe hit the /flowforge/info endpoint
+    //           localProjects[project.id] = {
+    //             process: projectSettings.pid,
+    //             dir: projectSettings.path,
+    //             port: projectSettings.port,
+    //             state: "running"
+    //           }
+    //         } else {
+    //           console.log("matching pid, but doesn't match project id")
+    //           //should restart
+    //           let pid = await startProject(project, {}, projectSettings.path, projectSettings.port);
+    //           await project.updateSetting('pid',pid);
+    //           localProjects[project.id] = {
+    //             process: pid,
+    //             dir: project.path,
+    //             port: project.port,
+    //             state: "running"
+    //           }
+    //         }
+    //       }
+    //     }
+    //   })
+    // })
 
     //nothing to expose at the moment
     return {}
@@ -222,7 +286,7 @@ module.exports = {
     this._usedPorts.push(port);
 
     let pid = await startProject(project, options, directory, port)
-    console.log("PID",pid, "port", port, "directory", directory)
+    logger.info(`PID ${pid}, port, ${port}, directory, ${directory}`)
 
     await project.updateSettings({
         pid: pid,
