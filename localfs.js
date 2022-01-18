@@ -146,7 +146,7 @@ function checkExistingProjects(driver, projects) {
           if (!results[0]) {
             // let projectOpts = JSON.parse(project.options)
             logger.info(`restating ${project.id}}`)
-            let pid = await startProject(app, project, {}, projectSettings.path, projectSettings.port);
+            let pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port);
 
             await project.updateSetting('pid',pid);
             localProjects[project.id] = {
@@ -170,7 +170,7 @@ function checkExistingProjects(driver, projects) {
             } else {
               logger.info("matching pid, but doesn't match project id, restarting")
               //should restart
-              let pid = await startProject(app, project, {}, projectSettings.path, projectSettings.port);
+              let pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port);
               await project.updateSetting('pid',pid);
               localProjects[project.id] = {
                 process: pid,
@@ -199,6 +199,8 @@ module.exports = {
     this._usedPorts = []
     //TODO need a better way to find this location?
     this._rootDir = path.resolve(app.config.home,"var/projects")
+
+    initalPortNumber = app.config.driver?.startPort || 7880
 
     logger = app.log
 
@@ -371,6 +373,9 @@ module.exports = {
       baseURL.port = projectSettings.port
       settings.baseURL = baseURL.href.slice(0,-1) //`http://localhost:${projectSettings.port}`
       settings.forgeURL = this._app.config.base_url
+      settings.env = {
+        NODE_PATH: path.join(this._app.config.home, "app", "node_modules")
+      }
     }
     // settings.state is set by the core forge app before this returns to
     // the launcher
