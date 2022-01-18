@@ -200,7 +200,7 @@ module.exports = {
     //TODO need a better way to find this location?
     this._rootDir = path.resolve(app.config.home,"var/projects")
 
-    initalPortNumber = app.config.driver?.startPort || 7880
+    initalPortNumber = app.config.driver.options?.start_port || 7880
 
     logger = app.log
 
