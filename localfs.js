@@ -16,7 +16,7 @@ const got = require('got');
 const path = require('path');
 const childProcess = require('child_process');
 
-const initalPortNumber = process.env["LOCALFS_START_PORT"] || 7880
+let initalPortNumber;
 
 var fileHandles = {}
 
@@ -57,7 +57,7 @@ function createUserDirIfNeeded(rootDir, id) {
   }
 }
 
-async function startProject(project, options, userDir, port) {
+async function startProject(app, project, options, userDir, port) {
 
   let env = {} //JSON.parse(JSON.stringify(process.env))
 
@@ -67,17 +67,12 @@ async function startProject(project, options, userDir, port) {
 
   env["FORGE_CLIENT_ID"] = authTokens.clientID;
   env["FORGE_CLIENT_SECRET"] = authTokens.clientSecret;
-  env["FORGE_URL"] = process.env["API_URL"];
+  env["FORGE_URL"] = app.config.api_url;
   env["FORGE_PROJECT_ID"] = project.id;
   env["FORGE_PROJECT_TOKEN"] = authTokens.token;
 
-  // env["FORGE_STORAGE_URL"] = process.env["BASE_URL"] + "/storage";
-  // env["FORGE_STORAGE_TOKEN"] = options.projectToken || "ABCD";
-  // env["FORGE_AUDIT_URL"] = process.env["BASE_URL"] + "/logging";
-  // env["FORGE_AUDIT_TOKEN"] = options.projectToken || "ABCD";
-
-  if (process.env["LOCALFS_NODE_PATH"]) {
-    env["PATH"] = process.env["PATH"]+path.delimiter+process.env.LOCALFS_NODE_PATH
+  if (app.config.node_path) {
+    env["PATH"] = process.env["PATH"]+path.delimiter+app.config.node_path
   } else {
     env["PATH"] = process.env["PATH"]
   }
@@ -122,7 +117,7 @@ async function startProject(project, options, userDir, port) {
     '-p',
     port + 1000,
     '--forgeURL',
-    process.env["BASE_URL"],
+    app.config.base_url,
     '--project',
     project.id,
     // '--token',
@@ -151,7 +146,8 @@ function checkExistingProjects(driver, projects) {
           if (!results[0]) {
             // let projectOpts = JSON.parse(project.options)
             logger.info(`restating ${project.id}}`)
-            let pid = await startProject(project, {}, projectSettings.path, projectSettings.port);
+            let pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port);
+
             await project.updateSetting('pid',pid);
             localProjects[project.id] = {
               process: pid,
@@ -174,7 +170,7 @@ function checkExistingProjects(driver, projects) {
             } else {
               logger.info("matching pid, but doesn't match project id, restarting")
               //should restart
-              let pid = await startProject(project, {}, projectSettings.path, projectSettings.port);
+              let pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port);
               await project.updateSetting('pid',pid);
               localProjects[project.id] = {
                 process: pid,
@@ -202,7 +198,9 @@ module.exports = {
     this._projects = {}
     this._usedPorts = []
     //TODO need a better way to find this location?
-    this._rootDir = path.resolve(process.env["LOCALFS_ROOT"] || path.join(process.mainModule.path, "containers/localfs_root"))
+    this._rootDir = path.resolve(app.config.home,"var/projects")
+
+    initalPortNumber = app.config.driver?.startPort || 7880
 
     logger = app.log
 
@@ -285,8 +283,9 @@ module.exports = {
     const port = getNextFreePort(this._usedPorts);
     this._usedPorts.push(port);
 
-    let pid = await startProject(project, options, directory, port)
+    let pid = await startProject(this._app, project, options, directory, port)
     logger.info(`PID ${pid}, port, ${port}, directory, ${directory}`)
+
 
     await project.updateSettings({
         pid: pid,
@@ -294,7 +293,7 @@ module.exports = {
         port: port,
     })
 
-    let baseURL = new URL(process.env['BASE_URL'])
+    let baseURL = new URL(this._app.config.base_url)
     baseURL.port = port
 
     project.url = baseURL.href; //"http://localhost:" + port;
@@ -370,10 +369,13 @@ module.exports = {
       settings.rootDir = this._rootDir
       settings.userDir = project.id
       settings.port = projectSettings.port
-      let baseURL = new URL(process.env['BASE_URL'])
+      let baseURL = new URL(this._app.config.base_url)
       baseURL.port = projectSettings.port
       settings.baseURL = baseURL.href.slice(0,-1) //`http://localhost:${projectSettings.port}`
-      settings.forgeURL = process.env["BASE_URL"]
+      settings.forgeURL = this._app.config.base_url
+      settings.env = {
+        NODE_PATH: path.join(this._app.config.home, "app", "node_modules")
+      }
     }
     // settings.state is set by the core forge app before this returns to
     // the launcher
