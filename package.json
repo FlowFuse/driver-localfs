@@ -4,7 +4,9 @@
   "description": "Local Filesystem FlowForge Project driver",
   "main": "localfs.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint -c .eslintrc *.js",
+    "lint:fix": "eslint -c .eslintrc *.js --fix"
   },
   "repository": {
     "type": "git",
@@ -23,5 +25,9 @@
     "got": "^11.8.3",
     "ps-node": "^0.1.6",
     "sequelize": "^6.9.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-standard": "^16.0.3"
   }
 }
