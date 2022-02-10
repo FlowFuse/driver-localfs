@@ -211,7 +211,7 @@ module.exports = {
         checkExistingProjects(this, projects)
         const driver = this
 
-        setInterval(async () => {
+        this._checkInterval = setInterval(async () => {
             const projects = await driver._app.db.models.Project.findAll()
             checkExistingProjects(driver, projects)
         }, 60000)
@@ -447,5 +447,11 @@ module.exports = {
         const port = await project.getSetting('port')
         const result = await got.get('http://localhost:' + (port + 1000) + '/flowforge/logs').json()
         return result
+    }
+    /**
+     * Shutdown driver
+     */
+    shutdown: async () => {
+        clearInterval(this._checkInterval)
     }
 }
