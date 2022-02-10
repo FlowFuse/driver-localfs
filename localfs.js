@@ -447,7 +447,7 @@ module.exports = {
         const port = await project.getSetting('port')
         const result = await got.get('http://localhost:' + (port + 1000) + '/flowforge/logs').json()
         return result
-    }
+    },
     /**
      * Shutdown driver
      */
