@@ -99,7 +99,8 @@ async function startProject (app, project, options, userDir, port) {
 
     let execPath
     for (let i = 0; i < process.mainModule.paths.length; i++) {
-        execPath = path.join(process.mainModule.paths[i], `.bin/flowforge-node-red${ext}`)
+        // execPath = path.join(process.mainModule.paths[i], `.bin/flowforge-node-red${ext}`)
+        execPath = path.join(process.mainModule.paths[i], '@flowforge/nr-launcher/index.js')
         if (fs.existsSync(execPath)) {
             break
         }
@@ -112,6 +113,7 @@ async function startProject (app, project, options, userDir, port) {
     logger.debug(`exec path ${execPath}`)
 
     const args = [
+        execPath, // new
         '-p',
         port + 1000,
         '--forgeURL',
@@ -122,7 +124,8 @@ async function startProject (app, project, options, userDir, port) {
     // options.projectToken
     ]
 
-    const proc = childProcess.spawn(execPath, args, processOptions)
+    // const proc = childProcess.spawn(execPath, args, processOptions)
+    const proc = childProcess.spawn(process.execPath, args, processOptions)
 
     proc.unref()
 
