@@ -160,7 +160,7 @@ function checkExistingProjects (driver, projects) {
             if (!err) {
                 if (!results[0]) {
                     // let projectOpts = JSON.parse(project.options)
-                    logger.info(`Restarting project ${project.id}}`)
+                    logger.info(`Restarting project ${project.id}`)
                     const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
 
                     await project.updateSetting('pid', pid)
