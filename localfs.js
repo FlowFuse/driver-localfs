@@ -90,7 +90,6 @@ async function startProject (app, project, options, userDir, port) {
      *              location using a set of instructions we provide (to be written)
      */
 
-
     logger.debug(`Project Environment Vars ${JSON.stringify(env)}`)
 
     const out = fs.openSync(path.join(userDir, '/out.log'), 'a')
