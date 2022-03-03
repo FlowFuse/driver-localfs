@@ -95,12 +95,12 @@ async function startProject (app, project, options, userDir, port) {
     }
 
     // this needs work
-    const ext = process.platform === 'win32' ? '.cmd' : ''
+    // const ext = process.platform === 'win32' ? '.cmd' : ''
 
     let execPath
-    for (let i = 0; i < process.mainModule.paths.length; i++) {
+    for (let i = 0; i < module.paths.length; i++) {
         // execPath = path.join(process.mainModule.paths[i], `.bin/flowforge-node-red${ext}`)
-        execPath = path.join(process.mainModule.paths[i], '@flowforge/nr-launcher/index.js')
+        execPath = path.join(module.paths[i], '@flowforge/nr-launcher/index.js')
         if (fs.existsSync(execPath)) {
             break
         }
