@@ -76,6 +76,21 @@ async function startProject (app, project, options, userDir, port) {
         env.PATH = process.env.PATH
     }
 
+    logger.debug(`Stack info ${JSON.stringify(project.ProjectStack?.properties)}`)
+    /*
+     * project.ProjectStack.properties will contain the stack properties for this project
+     *
+     * This driver specifices two properties:
+     *  - memory  : the value to apply to max-old-space-size
+     *              This gets passed to the project instance via the /:projectId/settings
+     *              endpoint - so this driver doesn't need to anything more with it
+     *  - nodered : the version of node-red to use
+     *              This driver needs to ensure the launcher is started using that
+     *              version of Node-RED. We assume the admin has installed it to a well-known
+     *              location using a set of instructions we provide (to be written)
+     */
+
+
     logger.debug(`Project Environment Vars ${JSON.stringify(env)}`)
 
     const out = fs.openSync(path.join(userDir, '/out.log'), 'a')
@@ -145,7 +160,7 @@ function checkExistingProjects (driver, projects) {
             if (!err) {
                 if (!results[0]) {
                     // let projectOpts = JSON.parse(project.options)
-                    logger.info(`restating ${project.id}}`)
+                    logger.info(`Restarting project ${project.id}}`)
                     const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
 
                     await project.updateSetting('pid', pid)
@@ -158,8 +173,7 @@ function checkExistingProjects (driver, projects) {
                 } else {
                     // found
                     logger.debug(`found ${results[0].pid}`)
-                    if (results[0].arguments.includes('--forgeURL') &&
-                results[0].arguments.includes(project.id)) {
+                    if (results[0].arguments.includes('--forgeURL') && results[0].arguments.includes(project.id)) {
                         // should maybe hit the /flowforge/info endpoint
                         localProjects[project.id] = {
                             process: projectSettings.pid,
@@ -168,7 +182,7 @@ function checkExistingProjects (driver, projects) {
                             state: 'running'
                         }
                     } else {
-                        logger.info("matching pid, but doesn't match project id, restarting")
+                        logger.info("Matching pid, but doesn't match project id, restarting")
                         // should restart
                         const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
                         await project.updateSetting('pid', pid)
@@ -209,13 +223,25 @@ module.exports = {
         }
 
         // TODO need to check DB and see if the pids exist
-        const projects = await this._app.db.models.Project.findAll()
+        const projects = await this._app.db.models.Project.findAll({
+            include: [
+                {
+                    model: this._app.db.models.ProjectStack
+                }
+            ]
+        })
 
         checkExistingProjects(this, projects)
         const driver = this
 
         this._checkInterval = setInterval(async () => {
-            const projects = await driver._app.db.models.Project.findAll()
+            const projects = await this._app.db.models.Project.findAll({
+                include: [
+                    {
+                        model: this._app.db.models.ProjectStack
+                    }
+                ]
+            })
             checkExistingProjects(driver, projects)
         }, 60000)
 
@@ -266,8 +292,22 @@ module.exports = {
         //   })
         // })
 
-        // nothing to expose at the moment
-        return {}
+        return {
+            stack: {
+                properties: {
+                    nodered: {
+                        label: 'Node-RED Version',
+                        validate: '^(0|[1-9]\\d*)(\\.(0|[1-9]\\d*|x|\\*)(\\.(0|[1-9]\\d*|x|\\*))?)?$',
+                        invalidMessage: 'Invalid version number - expected x.y.z'
+                    },
+                    memory: {
+                        label: 'Memory (MB)',
+                        validate: '^[1-9]\\d*$',
+                        invalidMessage: 'Invalid value - must be a number'
+                    }
+                }
+            }
+        }
     },
     /**
    * Create a new Project
@@ -284,7 +324,6 @@ module.exports = {
 
         const pid = await startProject(this._app, project, options, directory, port)
         logger.info(`PID ${pid}, port, ${port}, directory, ${directory}`)
-
         await project.updateSettings({
             pid: pid,
             path: directory,
@@ -376,6 +415,8 @@ module.exports = {
         }
         // settings.state is set by the core forge app before this returns to
         // the launcher
+
+        // settings.stack is set by the core forge app
 
         return settings
     },
