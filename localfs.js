@@ -134,7 +134,6 @@ function checkExistingProjects (driver, projects) {
 
     projects.forEach(async (project) => {
         const projectSettings = await project.getAllSettings()
-        driver._usedPorts.push(projectSettings.port)
         createUserDirIfNeeded(driver._rootDir, project.id)
 
         const localProjects = driver._projects
@@ -143,20 +142,25 @@ function checkExistingProjects (driver, projects) {
                 if (!results[0]) {
                     // let projectOpts = JSON.parse(project.options)
                     logger.info(`restating ${project.id}}`)
-                    const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
-
-                    await project.updateSetting('pid', pid)
-                    localProjects[project.id] = {
-                        process: pid,
-                        dir: project.path,
-                        port: project.port,
-                        state: 'running'
+                    if (projectSettings.path && projectSettings.port) {
+                        const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
+                        if (!driver._usedPorts.includes(projectSettings.port)) {
+                            driver._usedPorts.push(projectSettings.port)
+                        }
+                        await project.updateSetting('pid', pid)
+                        localProjects[project.id] = {
+                            process: pid,
+                            dir: project.path,
+                            port: project.port,
+                            state: 'running'
+                        }
+                    } else {
+                        logger.info(`missing port or path for ${project.id}`)
                     }
                 } else {
                     // found
                     logger.debug(`found ${results[0].pid}`)
-                    if (results[0].arguments.includes('--forgeURL') &&
-                results[0].arguments.includes(project.id)) {
+                    if (results[0].arguments.includes('--forgeURL') && results[0].arguments.includes(project.id)) {
                         // should maybe hit the /flowforge/info endpoint
                         localProjects[project.id] = {
                             process: projectSettings.pid,
@@ -166,14 +170,21 @@ function checkExistingProjects (driver, projects) {
                         }
                     } else {
                         logger.info("matching pid, but doesn't match project id, restarting")
-                        // should restart
-                        const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
-                        await project.updateSetting('pid', pid)
-                        localProjects[project.id] = {
-                            process: pid,
-                            dir: project.path,
-                            port: project.port,
-                            state: 'running'
+                        if (projectSettings.path && projectSettings.port) {
+                            if (!driver._usedPorts.includes(projectSettings.port)) {
+                                driver._usedPorts.push(projectSettings.port)
+                            }
+                            // should restart
+                            const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
+                            await project.updateSetting('pid', pid)
+                            localProjects[project.id] = {
+                                process: pid,
+                                dir: project.path,
+                                port: project.port,
+                                state: 'running'
+                            }
+                        } else {
+                            logger.info(`missing port or path for ${project.id}`)
                         }
                     }
                 }
@@ -328,7 +339,7 @@ module.exports = {
             fs.rmSync(projectSettings.path, { recursive: true, force: true })
         }, 5000)
 
-        this._usedPorts = this._usedPorts.filter(item => item !== this._projects[project.id].port)
+        this._usedPorts = this._usedPorts.filter(item => item !== projectSettings.port)
 
         delete this._projects[project.id]
 
