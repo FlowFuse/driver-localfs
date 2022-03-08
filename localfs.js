@@ -11,7 +11,6 @@
  */
 
 const fs = require('fs')
-const ps = require('ps-node')
 const got = require('got')
 const path = require('path')
 const childProcess = require('child_process')
@@ -140,59 +139,33 @@ function checkExistingProjects (driver, projects) {
         createUserDirIfNeeded(driver._rootDir, project.id)
 
         const localProjects = driver._projects
-        ps.lookup({ pid: projectSettings.pid }, async function (err, results) {
-            if (!err) {
-                if (!results[0]) {
-                    // let projectOpts = JSON.parse(project.options)
-                    logger.info(`restating ${project.id}}`)
-                    if (projectSettings.path && projectSettings.port) {
-                        const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
-                        if (!driver._usedPorts.includes(projectSettings.port)) {
-                            driver._usedPorts.push(projectSettings.port)
-                        }
-                        await project.updateSetting('pid', pid)
-                        localProjects[project.id] = {
-                            process: pid,
-                            dir: project.path,
-                            port: project.port,
-                            state: 'running'
-                        }
-                    } else {
-                        logger.info(`missing port or path for ${project.id}`)
-                    }
-                } else {
-                    // found
-                    logger.debug(`found ${results[0].pid}`)
-                    if (results[0].arguments.includes('--forgeURL') && results[0].arguments.includes(project.id)) {
-                        // should maybe hit the /flowforge/info endpoint
-                        localProjects[project.id] = {
-                            process: projectSettings.pid,
-                            dir: projectSettings.path,
-                            port: projectSettings.port,
-                            state: 'running'
-                        }
-                    } else {
-                        logger.info("matching pid, but doesn't match project id, restarting")
-                        // should restart
-                        if (projectSettings.path && projectSettings.port) {
-                            const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
-                            if (!driver._usedPorts.includes(projectSettings.port)) {
-                                driver._usedPorts.push(projectSettings.port)
-                            }
-                            await project.updateSetting('pid', pid)
-                            localProjects[project.id] = {
-                                process: pid,
-                                dir: project.path,
-                                port: project.port,
-                                state: 'running'
-                            }
-                        } else {
-                            logger.info(`missing port or path for ${project.id}`)
-                        }
-                    }
+
+        try {
+            const info = await got.get(`http://localhost:${projectSettings.port + 1000}/flowforge/info`, {
+                timeout: {
+                    request: 1000
                 }
+            })
+            console.log(info)
+            if (project.id !== info.id) {
+                // Running project doesn't match db
+                logger.info('Project on port projectSettings.port does not match database')
             }
-        })
+        } catch (err) {
+            // console.log(`Error: ${err}`)
+            logger.info(`restarting ${project.id}}`)
+            const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
+            if (!driver._usedPorts.includes(projectSettings.port)) {
+                driver._usedPorts.push(projectSettings.port)
+            }
+            await project.updateSetting('pid', pid)
+            localProjects[project.id] = {
+                process: pid,
+                dir: project.path,
+                port: project.port,
+                state: 'running'
+            }
+        }
     })
 }
 
