@@ -142,13 +142,11 @@ function checkExistingProjects (driver, projects) {
                     request: 1000
                 }
             })
-            console.log(info)
             if (project.id !== info.id) {
                 // Running project doesn't match db
                 logger.info('Project on port projectSettings.port does not match database')
             }
         } catch (err) {
-            // console.log(`Error: ${err}`)
             logger.info(`restarting ${project.id}}`)
             const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
             if (!driver._usedPorts.includes(projectSettings.port)) {
