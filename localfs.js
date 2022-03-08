@@ -145,10 +145,10 @@ function checkExistingProjects (driver, projects) {
                 timeout: {
                     request: 1000
                 }
-            })
+            }).json()
             if (project.id !== info.id) {
                 // Running project doesn't match db
-                logger.info('Project on port projectSettings.port does not match database')
+                logger.info(`Project on port ${projectSettings.port} does not match database`)
                 // TODO should do something here...
             }
         } catch (err) {
