@@ -88,6 +88,9 @@ async function startProject (app, project, options, userDir, port) {
      *              version of Node-RED. We assume the admin has installed it to a well-known
      *              location using a set of instructions we provide (to be written)
      */
+    if (project.ProjectStack?.properties.nodered) {
+        env.FORGE_NR_PATH = path.resolve(app.config.home, 'var/stacks', project.ProjectStack.properties.nodered)
+    }
 
     logger.debug(`Project Environment Vars ${JSON.stringify(env)}`)
 
