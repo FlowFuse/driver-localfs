@@ -343,10 +343,6 @@ module.exports = {
             settings.rootDir = this._rootDir
             settings.userDir = project.id
             settings.port = projectSettings.port
-            const baseURL = new URL(this._app.config.base_url)
-            baseURL.port = projectSettings.port
-            settings.baseURL = baseURL.href.slice(0, -1) // `http://localhost:${projectSettings.port}`
-            settings.forgeURL = this._app.config.base_url
             settings.env = {
                 NODE_PATH: path.join(this._app.config.home, 'app', 'node_modules')
             }
