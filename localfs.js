@@ -394,7 +394,7 @@ module.exports = {
     },
 
     /**
-     * Starts a Project's container
+     * Starts the flows
      * @param {Project} project - the project model instance
      */
     startFlows: async (project) => {
@@ -406,7 +406,7 @@ module.exports = {
         })
     },
     /**
-   * Stop a Project's container
+   * Stops the flows
    * @param {Project} project - the project model instance
    * @return {forge.Status}
    */
@@ -419,7 +419,7 @@ module.exports = {
         })
     },
     /**
-   * Restarts a Project's container
+   * Restarts the flows
    * @param {Project} project - the project model instance
    * @return {forge.Status}
    */
