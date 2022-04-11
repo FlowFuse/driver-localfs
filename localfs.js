@@ -15,51 +15,33 @@ const got = require('got')
 const path = require('path')
 const childProcess = require('child_process')
 
-let initalPortNumber
+let initialPortNumber
 
 const fileHandles = {}
 
 let logger
 
 function getNextFreePort (ports) {
-    ports.sort((a, b) => { return a - b })
-    let offset = ports[0]
-    let lowest = -1
-    for (let i = 0; i < ports.length; ++i) {
-        if (ports[i] !== offset) {
-            lowest = offset
-            break
-        }
-        offset++
+    let port = initialPortNumber
+    while (ports.has(port)) {
+        port++
     }
-    if (lowest === -1) {
-        if (ports.length !== 0) {
-            lowest = ports[ports.length - 1] + 1
-        } else {
-            lowest = initalPortNumber
-        }
-    }
-    return lowest
+    return port
 }
 
-function createUserDirIfNeeded (rootDir, id) {
-    const userDir = path.join(rootDir, id)
+function createUserDirIfNeeded (userDir) {
     if (!fs.existsSync(userDir)) {
-        logger.info(`Creating userDir ${userDir}`)
+        logger.info(`Creating project directory: ${userDir}`)
         fs.mkdirSync(userDir)
         fs.mkdirSync(path.join(userDir, 'node_modules'))
         fs.writeFileSync(path.join(userDir, 'package.json'),
-            '{\n"name": "node-red-project",\n"description": "A Node-RED Project",\n"version": "0.0.1",\n"private": true\n }'
+            '{\n"name": "flowforge-node-red-project",\n"description": "A FlowForge Node-RED Project",\n"version": "0.0.1",\n"private": true\n }'
         )
-    } else {
-        logger.debug(`userDir already exists ${userDir}`)
     }
 }
 
-async function startProject (app, project, options, userDir, port) {
+async function startProject (app, project, ProjectStack, userDir, port) {
     const env = {} // JSON.parse(JSON.stringify(process.env))
-
-    Object.assign(env, options.env)
 
     const authTokens = await project.refreshAuthTokens()
 
@@ -75,9 +57,9 @@ async function startProject (app, project, options, userDir, port) {
         env.PATH = process.env.PATH
     }
 
-    logger.debug(`Stack info ${JSON.stringify(project.ProjectStack?.properties)}`)
+    logger.debug(`Stack info ${JSON.stringify(ProjectStack?.properties)}`)
     /*
-     * project.ProjectStack.properties will contain the stack properties for this project
+     * ProjectStack.properties will contain the stack properties for this project
      *
      * This driver specifices two properties:
      *  - memory  : the value to apply to max-old-space-size
@@ -88,11 +70,12 @@ async function startProject (app, project, options, userDir, port) {
      *              version of Node-RED. We assume the admin has installed it to a well-known
      *              location using a set of instructions we provide (to be written)
      */
-    if (project.ProjectStack?.properties.nodered) {
-        env.FORGE_NR_PATH = path.resolve(app.config.home, 'var/stacks', project.ProjectStack.properties.nodered)
+    if (ProjectStack?.properties.nodered) {
+        env.FORGE_NR_PATH = path.resolve(app.config.home, 'var/stacks', ProjectStack.properties.nodered)
+        logger.info(`Set FORGE_NR_PATH to ${env.FORGE_NR_PATH}`)
     }
 
-    logger.debug(`Project Environment Vars ${JSON.stringify(env)}`)
+    // logger.debug(`Project Environment Vars ${JSON.stringify(env)}`)
 
     const out = fs.openSync(path.join(userDir, '/out.log'), 'a')
     const err = fs.openSync(path.join(userDir, '/out.log'), 'a')
@@ -148,14 +131,69 @@ async function startProject (app, project, options, userDir, port) {
     return proc.pid
 }
 
-function checkExistingProjects (driver, projects) {
-    logger.debug('checking projects')
+function stopProject (app, project, projectSettings) {
+    try {
+        if (process.platform === 'win32') {
+            childProcess.exec(`taskkill /pid ${projectSettings.pid} /T /F`)
+        } else {
+            process.kill(projectSettings.pid, 'SIGTERM')
+        }
+    } catch (err) {
+    // probably means already stopped
+    }
 
+    if (fileHandles[project.id]) {
+        fs.close(fileHandles[project.id].out)
+        fs.close(fileHandles[project.id].err)
+        delete fileHandles[project.id]
+    }
+}
+
+async function getProjectList (driver) {
+    // Get a list of all projects - with the absolute minimum of fields returned
+    const projects = await driver._app.db.models.Project.findAll({
+        attributes: [
+            'id',
+            'state',
+            'ProjectStackId'
+        ],
+        include: [
+            {
+                model: driver._app.db.models.ProjectSettings,
+                where: { key: driver._app.db.sequelize.or('port', 'path') }
+            }
+        ]
+    })
     projects.forEach(async (project) => {
-        const projectSettings = await project.getAllSettings()
-        createUserDirIfNeeded(driver._rootDir, project.id)
+        const projectSettings = {}
+        // Remap the project settings to make them accessible
+        project.ProjectSettings.forEach(ps => {
+            projectSettings[ps.key] = ps.value
+        })
+        driver._usedPorts.add(projectSettings.port)
+        if (driver._projects[project.id] === undefined) {
+            driver._projects[project.id] = {
+                state: 'unknown'
+            }
+        }
+        project._settings = projectSettings
+    })
+    return projects
+}
 
-        const localProjects = driver._projects
+async function checkExistingProjects (driver) {
+    logger.debug('[localfs] Checking project status')
+
+    const projects = await getProjectList(driver)
+    projects.forEach(async (project) => {
+        const projectSettings = project._settings
+        // Suspended projects don't get restarted
+        if (project.state === 'suspended') {
+            return
+        }
+
+        logger.debug(`[localfs] Project ${project.id} port ${projectSettings.port}`)
+
         try {
             const info = await got.get(`http://localhost:${projectSettings.port + 1000}/flowforge/info`, {
                 timeout: {
@@ -164,21 +202,22 @@ function checkExistingProjects (driver, projects) {
             }).json()
             if (project.id !== info.id) {
                 // Running project doesn't match db
-                logger.info(`Project on port ${projectSettings.port} does not match database`)
+                logger.warn(`[localfs] Project ${project.id} expected on port ${projectSettings.port}. Found ${info.id}`)
                 // TODO should do something here...
+            } else {
+                driver._projects[project.id] = {
+                    state: 'started'
+                }
             }
         } catch (err) {
-            logger.info(`restarting ${project.id}}`)
-            const pid = await startProject(driver._app, project, {}, projectSettings.path, projectSettings.port)
-            if (!driver._usedPorts.includes(projectSettings.port)) {
-                driver._usedPorts.push(projectSettings.port)
-            }
+            logger.info(`Starting project ${project.id} on port ${projectSettings.port}`)
+
+            const projectStack = await project.getProjectStack()
+
+            const pid = await startProject(driver._app, project, projectStack, projectSettings.path, projectSettings.port)
             await project.updateSetting('pid', pid)
-            localProjects[project.id] = {
-                process: pid,
-                dir: project.path,
-                port: project.port,
-                state: 'running'
+            driver._projects[project.id] = {
+                state: 'started'
             }
         }
     })
@@ -186,20 +225,20 @@ function checkExistingProjects (driver, projects) {
 
 module.exports = {
     /**
-   * Initialises this driver
-   * @param {string} app - the Vue application
-   * @param {object} options - A set of configuration options for the driver
-   * @return {forge.containers.ProjectArguments}
-   */
+     * Initialises this driver
+     * @param {string} app - the Vue application
+     * @param {object} options - A set of configuration options for the driver
+     * @return {forge.containers.ProjectArguments}
+     */
     init: async (app, options) => {
         this._app = app
         this._options = options
         this._projects = {}
-        this._usedPorts = []
+        this._usedPorts = new Set()
         // TODO need a better way to find this location?
         this._rootDir = path.resolve(app.config.home, 'var/projects')
 
-        initalPortNumber = app.config.driver.options?.start_port || 7880
+        initialPortNumber = app.config.driver.options?.start_port || 7880
 
         logger = app.log
 
@@ -207,27 +246,14 @@ module.exports = {
             fs.mkdirSync(this._rootDir)
         }
 
-        // TODO need to check DB and see if the pids exist
-        const projects = await this._app.db.models.Project.findAll({
-            include: [
-                {
-                    model: this._app.db.models.ProjectStack
-                }
-            ]
-        })
-
-        checkExistingProjects(this, projects)
-        const driver = this
-
-        this._checkInterval = setInterval(async () => {
-            const projects = await this._app.db.models.Project.findAll({
-                include: [
-                    {
-                        model: this._app.db.models.ProjectStack
-                    }
-                ]
-            })
-            checkExistingProjects(driver, projects)
+        // Ensure we have our local list of projects up to date
+        await getProjectList(this)
+        this._initialCheckTimeout = setTimeout(() => {
+            app.log.debug('[localfs] Restarting projects')
+            checkExistingProjects(this)
+        }, 1000)
+        this._checkInterval = setInterval(() => {
+            checkExistingProjects(this)
         }, 60000)
 
         return {
@@ -248,71 +274,78 @@ module.exports = {
         }
     },
     /**
-   * Create a new Project
-   * @param {Project} project - the project model instance
-   * @param {forge.containers.Options} options - options for the project
-   * @return {forge.containers.Project}
-   */
-    create: async (project, options) => {
+     * Start a Project
+     * @param {Project} project - the project model instance
+     */
+    start: async (project) => {
+        // Setup project directory
         const directory = path.join(this._rootDir, project.id)
-        createUserDirIfNeeded(this._rootDir, project.id)
+        createUserDirIfNeeded(directory)
 
-        const port = getNextFreePort(this._usedPorts)
-        this._usedPorts.push(port)
+        // Check if the project has a port assigned already
+        let port = await project.getSetting('port')
 
-        const pid = await startProject(this._app, project, options, directory, port)
-        logger.info(`PID ${pid}, port, ${port}, directory, ${directory}`)
+        if (port === undefined) {
+            // This project has never been run, so assign a new port to it
+            port = getNextFreePort(this._usedPorts)
+            this._usedPorts.add(port)
+        }
+
+        this._projects[project.id] = {
+            state: 'starting'
+        }
+
         await project.updateSettings({
-            pid: pid,
             path: directory,
             port: port
         })
 
-        const baseURL = new URL(this._app.config.base_url)
-        baseURL.port = port
-
-        project.url = baseURL.href // "http://localhost:" + port;
-        await project.save()
-
-        this._projects[project.id] = {
-            process: pid,
-            dir: directory,
-            port: port,
-            state: 'running'
-        }
+        // Kick-off the project start and return the promise to let it
+        // complete asynchronously
+        return startProject(this._app, project, project.ProjectStack, directory, port).then(async pid => {
+            return new Promise(resolve => {
+                // These is a race condition when running locally where the UI
+                // creates a project then immediate reloads it. That can hit
+                // a timing window where the project creation completes mid-request
+                setTimeout(async () => {
+                    logger.debug(`PID ${pid}, port, ${port}, directory, ${directory}`)
+                    await project.updateSetting('pid', pid)
+                    const baseURL = new URL(this._app.config.base_url)
+                    baseURL.port = port
+                    project.url = baseURL.href
+                    await project.save()
+                    this._projects[project.id].state = 'started'
+                    resolve()
+                }, 1000)
+            })
+        })
     },
     /**
-   * Removes a Project
-   * @param {Project} project - the project model instance
-   * @return {Object}
-   */
+     * Stops a project from running, but doesn't clear its state as it could
+     * get restarted and we want to preserve port number and user dir
+     * @param {*} project
+     */
+    stop: async (project) => {
+        const projectSettings = await project.getAllSettings()
+        this._projects[project.id].state = 'suspended'
+        stopProject(this._app, project, projectSettings)
+    },
+
+    /**
+     * Removes a Project
+     * @param {Project} project - the project model instance
+     * @return {Object}
+     */
     remove: async (project) => {
         const projectSettings = await project.getAllSettings()
-        try {
-            if (process.platform === 'win32') {
-                childProcess.exec(`taskkill /pid ${projectSettings.pid} /T /F`)
-            } else {
-                process.kill(projectSettings.pid, 'SIGTERM')
-            }
-        } catch (err) {
-        // probably means already stopped
-        }
-
-        if (fileHandles[project.id]) {
-            fs.close(fileHandles[project.id].out)
-            fs.close(fileHandles[project.id].err)
-            delete fileHandles[project.id]
-        }
+        stopProject(this._app, project, projectSettings)
 
         setTimeout(() => {
             fs.rmSync(projectSettings.path, { recursive: true, force: true })
         }, 5000)
 
-        this._usedPorts = this._usedPorts.filter(item => item !== projectSettings.port)
-
+        this._usedPorts.delete(projectSettings.port)
         delete this._projects[project.id]
-
-        return { status: 'okay' }
     },
     /**
     * Retrieves details of a project's container
@@ -320,29 +353,34 @@ module.exports = {
     * @return {Object}
     */
     details: async (project) => {
+        if (this._projects[project.id].state !== 'started') {
+            // We should only poll the launcher if we think it is running.
+            // Otherwise, return our cached state
+            return {
+                state: this._projects[project.id].state
+            }
+        }
         const port = await project.getSetting('port')
         const infoURL = 'http://localhost:' + (port + 1000) + '/flowforge/info'
         try {
             const info = JSON.parse((await got.get(infoURL)).body)
             return info
         } catch (err) {
+            console.log(err)
             // TODO
-
         }
     },
     /**
-   * Returns the settings for the project
-   * @param {Project} project - the project model instance
-   */
+     * Returns the settings for the project
+     * @param {Project} project - the project model instance
+     */
     settings: async (project) => {
         const settings = {}
         if (project) {
-            const projectSettings = await project.getAllSettings()
             settings.projectID = project.id
-            // settings.env = options.env
             settings.rootDir = this._rootDir
             settings.userDir = project.id
-            settings.port = projectSettings.port
+            settings.port = await project.getSetting('port')
             settings.env = {
                 NODE_PATH: path.join(this._app.config.home, 'app', 'node_modules')
             }
@@ -354,66 +392,44 @@ module.exports = {
 
         return settings
     },
-    /**
-   * Lists all containers
-   * @param {string} filter - rules to filter the containers
-   * @return {Object}
-   */
-    list: async (filter) => {
-    // TODO work out what filtering needs to be done
-        const projects = await this._app.db.models.Project.findAll()
-        return projects
-    },
-    /**
-   * Starts a Project's container
-   * @param {Project} project - the project model instance
-   * @return {forge.Status}
-   */
-    start: async (project) => {
-        const port = await project.getSetting('port')
 
+    /**
+     * Starts the flows
+     * @param {Project} project - the project model instance
+     */
+    startFlows: async (project) => {
+        const port = await project.getSetting('port')
         await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
             json: {
                 cmd: 'start'
             }
         })
-
-        project.state = 'starting'
-
-        return { status: 'okay' }
     },
     /**
-   * Stop a Project's container
+   * Stops the flows
    * @param {Project} project - the project model instance
    * @return {forge.Status}
    */
-    stop: async (project) => {
+    stopFlows: async (project) => {
         const port = await project.getSetting('port')
         await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
             json: {
                 cmd: 'stop'
             }
         })
-        // process.kill(project.pid,'SIGTERM')
-        project.state = 'stopped'
-        project.save()
-        return Promise.resolve({ status: 'okay' })
     },
     /**
-   * Restarts a Project's container
+   * Restarts the flows
    * @param {Project} project - the project model instance
    * @return {forge.Status}
    */
-    restart: async (project) => {
+    restartFlows: async (project) => {
         const port = await project.getSetting('port')
-
         await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
             json: {
                 cmd: 'restart'
             }
         })
-
-        return { state: 'okay' }
     },
 
     /**
@@ -430,6 +446,7 @@ module.exports = {
      * Shutdown driver
      */
     shutdown: async () => {
+        clearTimeout(this._initialCheckTimeout)
         clearInterval(this._checkInterval)
     }
 }
