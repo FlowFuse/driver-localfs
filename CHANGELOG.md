@@ -1,5 +1,8 @@
 #### 0.4.0: Release
 
+ - Move setting project URL to before launcher started (#39) @hardillb
+ - Update localfs to new driver api (#37) @knolleary
+ - Update project automation (#38) @knolleary
 
 #### 0.3.0: Release
 
