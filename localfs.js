@@ -255,17 +255,18 @@ module.exports = {
         this._checkInterval = setInterval(() => {
             checkExistingProjects(this)
         }, 60000)
-
         return {
             stack: {
                 properties: {
                     nodered: {
                         label: 'Node-RED Version',
-                        validate: '^(0|[1-9]\\d*)(\\.(0|[1-9]\\d*|x|\\*)(\\.(0|[1-9]\\d*|x|\\*))?)?$',
+                        description: 'This must match a version installed on the platform. See the docs for how to setup stacks locally.',
+                        validate: '^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-.*)?$',
                         invalidMessage: 'Invalid version number - expected x.y.z'
                     },
                     memory: {
                         label: 'Memory (MB)',
+                        description: 'This is the point at which the runtime will start garbage collecting unused memory. It is not a hard limit.',
                         validate: '^[1-9]\\d*$',
                         invalidMessage: 'Invalid value - must be a number'
                     }
