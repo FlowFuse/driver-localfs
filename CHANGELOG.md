@@ -1,7 +1,5 @@
 #### 0.5.0: Release
 
- - Update version to 0.5.0
- - Update CHANGELOG for 0.5.0
  - Modify nodered stack property regex to support beta releases (#43) @knolleary
 
 #### 0.4.0: Release
