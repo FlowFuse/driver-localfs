@@ -300,6 +300,11 @@ module.exports = {
             port: port
         })
 
+        const baseURL = new URL(this._app.config.base_url)
+        baseURL.port = port
+        project.url = baseURL.href
+        await project.save()
+
         // Kick-off the project start and return the promise to let it
         // complete asynchronously
         return startProject(this._app, project, project.ProjectStack, directory, port).then(async pid => {
@@ -310,10 +315,6 @@ module.exports = {
                 setTimeout(async () => {
                     logger.debug(`PID ${pid}, port, ${port}, directory, ${directory}`)
                     await project.updateSetting('pid', pid)
-                    const baseURL = new URL(this._app.config.base_url)
-                    baseURL.port = port
-                    project.url = baseURL.href
-                    await project.save()
                     this._projects[project.id].state = 'started'
                     resolve()
                 }, 1000)
