@@ -266,8 +266,8 @@ module.exports = {
                     },
                     memory: {
                         label: 'Memory (MB)',
-                        description: 'This is the point at which the runtime will start garbage collecting unused memory. It is not a hard limit.',
-                        validate: '^[1-9]\\d*$',
+                        description: 'This is the point at which the runtime will start garbage collecting unused memory. Recommended minimum: 256',
+                        validate: '^[1-9]\\d+$',
                         invalidMessage: 'Invalid value - must be a number'
                     }
                 }
