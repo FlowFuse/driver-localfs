@@ -255,20 +255,20 @@ module.exports = {
         this._checkInterval = setInterval(() => {
             checkExistingProjects(this)
         }, 60000)
-
         return {
             stack: {
                 properties: {
                     nodered: {
                         label: 'Node-RED Version',
-                        validate: '^(0|[1-9]\\d*)(\\.(0|[1-9]\\d*|x|\\*)(\\.(0|[1-9]\\d*|x|\\*))?)?$',
+                        description: 'This must match a version installed on the platform. See the docs for how to setup stacks locally.',
+                        validate: '^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-.*)?$',
                         invalidMessage: 'Invalid version number - expected x.y.z'
                     },
                     memory: {
                         label: 'Memory (MB)',
+                        description: 'This is the point at which the runtime will start garbage collecting unused memory. Recommended minimum: 256',
                         validate: '^[1-9]\\d+$',
-                        invalidMessage: 'Invalid value - must be a number',
-                        description: 'NodeJS --max-old-space, recomended minimum 256'
+                        invalidMessage: 'Invalid value - must be a number'
                     }
                 }
             }
@@ -301,6 +301,11 @@ module.exports = {
             port: port
         })
 
+        const baseURL = new URL(this._app.config.base_url)
+        baseURL.port = port
+        project.url = baseURL.href
+        await project.save()
+
         // Kick-off the project start and return the promise to let it
         // complete asynchronously
         return startProject(this._app, project, project.ProjectStack, directory, port).then(async pid => {
@@ -311,10 +316,6 @@ module.exports = {
                 setTimeout(async () => {
                     logger.debug(`PID ${pid}, port, ${port}, directory, ${directory}`)
                     await project.updateSetting('pid', pid)
-                    const baseURL = new URL(this._app.config.base_url)
-                    baseURL.port = port
-                    project.url = baseURL.href
-                    await project.save()
                     this._projects[project.id].state = 'started'
                     resolve()
                 }, 1000)

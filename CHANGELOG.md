@@ -1,3 +1,13 @@
+#### 0.5.0: Release
+
+ - Modify nodered stack property regex to support beta releases (#43) @knolleary
+
+#### 0.4.0: Release
+
+ - Move setting project URL to before launcher started (#39) @hardillb
+ - Update localfs to new driver api (#37) @knolleary
+ - Update project automation (#38) @knolleary
+
 #### 0.3.0: Release
 
  - Stop driver setting baseURL/forgeURL (#35) @knolleary
