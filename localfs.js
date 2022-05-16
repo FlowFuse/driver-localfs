@@ -266,8 +266,9 @@ module.exports = {
                     },
                     memory: {
                         label: 'Memory (MB)',
-                        validate: '^[1-9]\\d*$',
-                        invalidMessage: 'Invalid value - must be a number'
+                        validate: '^[1-9]\\d+$',
+                        invalidMessage: 'Invalid value - must be a number',
+                        description: 'NodeJS --max-old-space, recomended minimum 256'
                     }
                 }
             }
