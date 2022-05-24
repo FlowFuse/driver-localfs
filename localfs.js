@@ -50,6 +50,7 @@ async function startProject (app, project, ProjectStack, userDir, port) {
     env.FORGE_URL = app.config.api_url
     env.FORGE_PROJECT_ID = project.id
     env.FORGE_PROJECT_TOKEN = authTokens.token
+    env.FORGE_NR_SECRET = await project.getSetting('credentialSecret')
 
     if (app.config.node_path) {
         env.PATH = process.env.PATH + path.delimiter + app.config.node_path
