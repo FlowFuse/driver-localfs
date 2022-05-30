@@ -434,6 +434,25 @@ module.exports = {
             }
         })
     },
+    /**
+   * Logout Node-RED instance
+   * @param {Project} project - the project model instance
+   * @param {string} token - the node-red token to revoke
+   * @return {forge.Status}
+   */
+    logoutNodeRED: async (project, token) => { // logout:nodered(step-3)
+        const port = await project.getSetting('port')
+        try {
+            await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', { // logout:nodered(step-4)
+                json: {
+                    cmd: 'logout',
+                    token: token
+                }
+            })
+        } catch (error) {
+            console.error(error)
+        }
+    },
 
     /**
    * Get a Project's logs
