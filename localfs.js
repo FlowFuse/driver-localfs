@@ -440,7 +440,7 @@ module.exports = {
    * @param {string} token - the node-red token to revoke
    * @return {forge.Status}
    */
-    logoutNodeRED: async (project, token) => { // logout:nodered(step-3)
+    revokeUserToken: async (project, token) => { // logout:nodered(step-3)
         const port = await project.getSetting('port')
         try {
             this._app.log.debug(`[localfs] Project ${project.id} - logging out node-red instance`)
@@ -451,7 +451,7 @@ module.exports = {
                 }
             })
         } catch (error) {
-            logger.error(`[localfs] Project ${project.id} - error in 'logoutNodeRED': ${error.stack}`)
+            logger.error(`[localfs] Project ${project.id} - error in 'revokeUserToken': ${error.stack}`)
         }
     },
 
