@@ -450,6 +450,26 @@ module.exports = {
             }
         })
     },
+    /**
+   * Logout Node-RED instance
+   * @param {Project} project - the project model instance
+   * @param {string} token - the node-red token to revoke
+   * @return {forge.Status}
+   */
+    revokeUserToken: async (project, token) => { // logout:nodered(step-3)
+        const port = await project.getSetting('port')
+        try {
+            this._app.log.debug(`[localfs] Project ${project.id} - logging out node-red instance`)
+            await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', { // logout:nodered(step-4)
+                json: {
+                    cmd: 'logout',
+                    token: token
+                }
+            })
+        } catch (error) {
+            logger.error(`[localfs] Project ${project.id} - error in 'revokeUserToken': ${error.stack}`)
+        }
+    },
 
     /**
    * Get a Project's logs
