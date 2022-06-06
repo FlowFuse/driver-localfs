@@ -10,7 +10,8 @@
  *
  */
 
-const fs = require('fs')
+const fs = require('fs/promises')
+const { existsSync, openSync, close } = require('fs')
 const got = require('got')
 const path = require('path')
 const childProcess = require('child_process')
@@ -29,12 +30,12 @@ function getNextFreePort (ports) {
     return port
 }
 
-function createUserDirIfNeeded (userDir) {
-    if (!fs.existsSync(userDir)) {
+async function createUserDirIfNeeded (userDir) {
+    if (!existsSync(userDir)) {
         logger.info(`Creating project directory: ${userDir}`)
-        fs.mkdirSync(userDir)
-        fs.mkdirSync(path.join(userDir, 'node_modules'))
-        fs.writeFileSync(path.join(userDir, 'package.json'),
+        await fs.mkdir(userDir)
+        await fs.mkdir(path.join(userDir, 'node_modules'))
+        await fs.writeFile(path.join(userDir, 'package.json'),
             '{\n"name": "flowforge-node-red-project",\n"description": "A FlowForge Node-RED Project",\n"version": "0.0.1",\n"private": true\n }'
         )
     }
@@ -78,8 +79,8 @@ async function startProject (app, project, ProjectStack, userDir, port) {
 
     // logger.debug(`Project Environment Vars ${JSON.stringify(env)}`)
 
-    const out = fs.openSync(path.join(userDir, '/out.log'), 'a')
-    const err = fs.openSync(path.join(userDir, '/out.log'), 'a')
+    const out = openSync(path.join(userDir, '/out.log'), 'a')
+    const err = openSync(path.join(userDir, '/out.log'), 'a')
 
     fileHandles[project.id] = {
         out: out,
@@ -101,7 +102,7 @@ async function startProject (app, project, ProjectStack, userDir, port) {
     for (let i = 0; i < module.paths.length; i++) {
         // execPath = path.join(process.mainModule.paths[i], `.bin/flowforge-node-red${ext}`)
         execPath = path.join(module.paths[i], '@flowforge/nr-launcher/index.js')
-        if (fs.existsSync(execPath)) {
+        if (existsSync(execPath)) {
             break
         }
     }
@@ -144,8 +145,8 @@ function stopProject (app, project, projectSettings) {
     }
 
     if (fileHandles[project.id]) {
-        fs.close(fileHandles[project.id].out)
-        fs.close(fileHandles[project.id].err)
+        close(fileHandles[project.id].out)
+        close(fileHandles[project.id].err)
         delete fileHandles[project.id]
     }
 }
@@ -195,6 +196,9 @@ async function checkExistingProjects (driver) {
 
         logger.debug(`[localfs] Project ${project.id} port ${projectSettings.port}`)
 
+        const directory = path.join(driver._rootDir, project.id)
+        await createUserDirIfNeeded(directory)
+
         try {
             const info = await got.get(`http://localhost:${projectSettings.port + 1000}/flowforge/info`, {
                 timeout: {
@@ -243,8 +247,8 @@ module.exports = {
 
         logger = app.log
 
-        if (!fs.existsSync(this._rootDir)) {
-            fs.mkdirSync(this._rootDir)
+        if (!existsSync(this._rootDir)) {
+            await fs.mkdir(this._rootDir)
         }
 
         // Ensure we have our local list of projects up to date
@@ -282,7 +286,7 @@ module.exports = {
     start: async (project) => {
         // Setup project directory
         const directory = path.join(this._rootDir, project.id)
-        createUserDirIfNeeded(directory)
+        await createUserDirIfNeeded(directory)
 
         // Check if the project has a port assigned already
         let port = await project.getSetting('port')
@@ -344,7 +348,7 @@ module.exports = {
         stopProject(this._app, project, projectSettings)
 
         setTimeout(() => {
-            fs.rmSync(projectSettings.path, { recursive: true, force: true })
+            fs.rm(projectSettings.path, { recursive: true, force: true })
         }, 5000)
 
         this._usedPorts.delete(projectSettings.port)
@@ -356,6 +360,9 @@ module.exports = {
     * @return {Object}
     */
     details: async (project) => {
+        if (this._projects[project.id] === undefined) {
+            return { state: 'unknown' }
+        }
         if (this._projects[project.id].state !== 'started') {
             // We should only poll the launcher if we think it is running.
             // Otherwise, return our cached state
@@ -401,6 +408,9 @@ module.exports = {
      * @param {Project} project - the project model instance
      */
     startFlows: async (project) => {
+        if (this._projects[project.id] === undefined) {
+            throw new Error('Project cannot start flows')
+        }
         const port = await project.getSetting('port')
         await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
             json: {
@@ -414,6 +424,9 @@ module.exports = {
    * @return {forge.Status}
    */
     stopFlows: async (project) => {
+        if (this._projects[project.id] === undefined) {
+            throw new Error('Project cannot stop flows')
+        }
         const port = await project.getSetting('port')
         await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
             json: {
@@ -427,6 +440,9 @@ module.exports = {
    * @return {forge.Status}
    */
     restartFlows: async (project) => {
+        if (this._projects[project.id] === undefined) {
+            throw new Error('Project cannot restart flows')
+        }
         const port = await project.getSetting('port')
         await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
             json: {
@@ -441,6 +457,9 @@ module.exports = {
    * @return {array} logs
    */
     logs: async (project) => {
+        if (this._projects[project.id] === undefined) {
+            throw new Error('Cannot get project logs')
+        }
         const port = await project.getSetting('port')
         const result = await got.get('http://localhost:' + (port + 1000) + '/flowforge/logs').json()
         return result
