@@ -1,3 +1,12 @@
+#### 0.6.0: Release
+
+ - Map FlowForge logout to nodered auth/revoke (#48) @Steve-Mcl
+ - Handle actions on deleted project (#49) @knolleary
+ - Update dependencies (#50) @knolleary
+ - Pass credentialSecret to env (supports auto gen credential secret PRs) (#47) @Steve-Mcl
+ - Add description to stack memory value (#46) @hardillb
+ - Make sure DB has right values for port + URL (#45) @hardillb
+
 #### 0.5.0: Release
 
  - Modify nodered stack property regex to support beta releases (#43) @knolleary
