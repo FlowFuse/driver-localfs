@@ -1,3 +1,6 @@
+#### 0.6.0: Release
+
+
 #### 0.5.0: Release
 
  - Modify nodered stack property regex to support beta releases (#43) @knolleary
