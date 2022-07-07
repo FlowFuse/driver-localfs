@@ -1,3 +1,6 @@
+#### 0.7.0: Release
+
+
 #### 0.6.0: Release
 
  - Map FlowForge logout to nodered auth/revoke (#48) @Steve-Mcl
