@@ -49,6 +49,7 @@ async function startProject (app, project, ProjectStack, userDir, port) {
     env.FORGE_CLIENT_ID = authTokens.clientID
     env.FORGE_CLIENT_SECRET = authTokens.clientSecret
     env.FORGE_URL = app.config.api_url
+    env.FORGE_TEAM_ID = app.db.models.Team.encodeHashid(project.TeamId)
     env.FORGE_PROJECT_ID = project.id
     env.FORGE_PROJECT_TOKEN = authTokens.token
     env.FORGE_NR_SECRET = await project.getSetting('credentialSecret')
@@ -157,7 +158,8 @@ async function getProjectList (driver) {
         attributes: [
             'id',
             'state',
-            'ProjectStackId'
+            'ProjectStackId',
+            'TeamId'
         ],
         include: [
             {
