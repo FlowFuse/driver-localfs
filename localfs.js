@@ -58,6 +58,9 @@ async function startProject (app, project, ProjectStack, userDir, port) {
         env.FORGE_BROKER_USERNAME = authTokens.broker.username
         env.FORGE_BROKER_PASSWORD = authTokens.broker.password
     }
+    if (app.license.active()) {
+        env.FORGE_LICENSE_TYPE = 'ee'
+    }
 
     if (app.config.node_path) {
         env.PATH = process.env.PATH + path.delimiter + app.config.node_path
