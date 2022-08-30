@@ -357,8 +357,12 @@ module.exports = {
         const projectSettings = await project.getAllSettings()
         stopProject(this._app, project, projectSettings)
 
-        setTimeout(() => {
-            fs.rm(projectSettings.path, { recursive: true, force: true })
+        setTimeout(async () => {
+            try {
+                await fs.rm(projectSettings.path, { recursive: true, force: true })
+            } catch (error) {
+                logger.warn(`Error removing project files: ${projectSettings.path}`)
+            }
         }, 5000)
 
         this._usedPorts.delete(projectSettings.port)
