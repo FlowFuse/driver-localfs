@@ -1,3 +1,7 @@
+#### 0.9.0: Release
+
+ - Prevent localfs crash when deleting project (#60) @Steve-Mcl
+
 #### 0.8.0: Release
 
  - Add licenseType to launcher env (#58) @knolleary
