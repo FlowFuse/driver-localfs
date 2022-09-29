@@ -1,3 +1,6 @@
+#### 0.10.0: Release
+
+
 #### 0.9.0: Release
 
  - Prevent localfs crash when deleting project (#60) @Steve-Mcl
