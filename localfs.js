@@ -15,6 +15,7 @@ const { existsSync, openSync, close } = require('fs')
 const got = require('got')
 const path = require('path')
 const childProcess = require('child_process')
+const { run } = require('./lib/exec')
 
 let initialPortNumber
 
@@ -35,9 +36,29 @@ async function createUserDirIfNeeded (userDir) {
         logger.info(`Creating project directory: ${userDir}`)
         await fs.mkdir(userDir)
         await fs.mkdir(path.join(userDir, 'node_modules'))
+        const packageJSON = {
+            name: 'flowforge-node-red-project',
+            description: 'A FlowFoge Node-RED Project',
+            version: '0.0.1',
+            private: true,
+            dependencies: {
+                '@flowforge/nr-theme': '^0.1.3',
+                '@flowforge/nr-project-nodes': '^0.1.1'
+            }
+        }
         await fs.writeFile(path.join(userDir, 'package.json'),
-            '{\n"name": "flowforge-node-red-project",\n"description": "A FlowForge Node-RED Project",\n"version": "0.0.1",\n"private": true\n }'
+            JSON.stringify(packageJSON)
         )
+        await installProjectNodes(userDir)
+    }
+}
+
+async function installProjectNodes (userDir) {
+    const result = await run('npm', ['install', '--no-audit', '--no-update-notifier', '--no-fund', '--production', '--engine-strict'], {
+        cwd: userDir
+    })
+    if (result.code !== 0) {
+        logger.debug(`Failed to install projects nodes ${result.stderr}`)
     }
 }
 
