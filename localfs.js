@@ -50,6 +50,23 @@ async function createUserDirIfNeeded (userDir) {
             JSON.stringify(packageJSON)
         )
         await installProjectNodes(userDir)
+    } else {
+        const packagePath = path.join(userDir, 'package.json')
+        if (!existsSync(packagePath)) {
+            try {
+                const packageJSON = JSON.parse(fs.readFileSync(packagePath))
+                if (!packageJSON.dependencies['@flowforge/nr-theme'] && !packageJSON.dependencies['@flowforge/nr-project-nodes']) {
+                    packageJSON.dependencies['@flowforge/nr-theme'] = '^0.1.3'
+                    packageJSON.dependencies['@flowforge/nr-project-nodes'] = '^0.1.1'
+                    await fs.writeFile(path.join(userDir, 'package.json'),
+                        JSON.stringify(packageJSON)
+                    )
+                    await installProjectNodes(userDir)
+                }
+            } catch (err) {
+
+            }
+        }
     }
 }
 
@@ -350,7 +367,7 @@ module.exports = {
                 // creates a project then immediate reloads it. That can hit
                 // a timing window where the project creation completes mid-request
                 setTimeout(async () => {
-                    logger.debug(`PID ${pid}, port, ${port}, directory, ${directory}`)
+                    logger.info(`PID ${pid}, port, ${port}, directory, ${directory}`)
                     await project.updateSetting('pid', pid)
                     this._projects[project.id].state = 'started'
                     resolve()
