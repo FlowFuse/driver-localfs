@@ -15,7 +15,6 @@ const { existsSync, openSync, close } = require('fs')
 const got = require('got')
 const path = require('path')
 const childProcess = require('child_process')
-const { run } = require('./lib/exec')
 
 let initialPortNumber
 
