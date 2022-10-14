@@ -40,25 +40,11 @@ async function createUserDirIfNeeded (userDir) {
             name: 'flowforge-node-red-project',
             description: 'A FlowFoge Node-RED Project',
             version: '0.0.1',
-            private: true,
-            dependencies: {
-                '@flowforge/nr-theme': '^0.1.3',
-                '@flowforge/nr-project-nodes': '^0.1.1'
-            }
+            private: true
         }
         await fs.writeFile(path.join(userDir, 'package.json'),
             JSON.stringify(packageJSON)
         )
-        await installProjectNodes(userDir)
-    }
-}
-
-async function installProjectNodes (userDir) {
-    const result = await run('npm', ['install', '--no-audit', '--no-update-notifier', '--no-fund', '--production', '--engine-strict'], {
-        cwd: userDir
-    })
-    if (result.code !== 0) {
-        logger.debug(`Failed to install projects nodes ${result.stderr}`)
     }
 }
 
