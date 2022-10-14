@@ -37,7 +37,7 @@ async function createUserDirIfNeeded (userDir) {
         await fs.mkdir(path.join(userDir, 'node_modules'))
         const packageJSON = {
             name: 'flowforge-node-red-project',
-            description: 'A FlowFoge Node-RED Project',
+            description: 'A FlowForge Node-RED Project',
             version: '0.0.1',
             private: true
         }
