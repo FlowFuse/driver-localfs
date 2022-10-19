@@ -98,15 +98,15 @@ async function startProject (app, project, ProjectStack, userDir, port) {
     const err = openSync(path.join(userDir, '/out.log'), 'a')
 
     fileHandles[project.id] = {
-        out: out,
-        err: err
+        out,
+        err
     }
 
     const processOptions = {
         detached: true,
         stdio: ['ignore', out, err],
         windowsHide: true,
-        env: env,
+        env,
         cwd: userDir
     }
 
@@ -319,7 +319,7 @@ module.exports = {
 
         await project.updateSettings({
             path: directory,
-            port: port
+            port
         })
 
         const baseURL = new URL(this._app.config.base_url)
@@ -483,7 +483,7 @@ module.exports = {
             await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', { // logout:nodered(step-4)
                 json: {
                     cmd: 'logout',
-                    token: token
+                    token
                 }
             })
         } catch (error) {
