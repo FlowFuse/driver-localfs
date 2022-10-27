@@ -1,3 +1,9 @@
+#### 1.0.0: Release
+
+ - Update eslint and add default build action (#67) @knolleary
+ - Revert 64 (#66) @hardillb
+ - Install theme and project nodes into userDir (#64) @hardillb
+
 #### 0.10.0: Release
 
 
