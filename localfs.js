@@ -1,7 +1,7 @@
 /**
  * Local Container driver
  *
- * Handles the creation and deletation of containers to back Projects
+ * Handles the creation and deletion of containers to back Projects
  *
  * This driver creates Projects backed by userDirectories on the local file system
  *
@@ -59,6 +59,9 @@ async function startProject (app, project, ProjectStack, userDir, port) {
     env.FORGE_PROJECT_ID = project.id
     env.FORGE_PROJECT_TOKEN = authTokens.token
     env.FORGE_NR_SECRET = await project.getSetting('credentialSecret')
+    // Inbound connections for localfs enabled by default
+    env.FORGE_NR_NO_TCP_IN = false // MVP. Future iteration could present this to YML or UI
+    env.FORGE_NR_NO_UDP_IN = false// MVP. Future iteration could present this to YML or UI
     if (authTokens.broker) {
         env.FORGE_BROKER_URL = authTokens.broker.url
         env.FORGE_BROKER_USERNAME = authTokens.broker.username
