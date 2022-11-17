@@ -14,6 +14,7 @@ const fs = require('fs/promises')
 const { existsSync, openSync, close } = require('fs')
 const got = require('got')
 const path = require('path')
+const semver = require('semver')
 const childProcess = require('child_process')
 
 let initialPortNumber
@@ -513,5 +514,30 @@ module.exports = {
     shutdown: async () => {
         clearTimeout(this._initialCheckTimeout)
         clearInterval(this._checkInterval)
+    },
+    /**
+     * getDefaultStackProperties
+     */
+    getDefaultStackProperties: () => {
+        const properties = {
+            memory: 256
+        }
+
+        const entries = fs.readdirSync(this._rootDir, {withFileTypes: true})
+        const directories = entries.filter(dir => dir.isDirectory())
+            .map(dir => dir.name)
+            .sort((a, b) => {
+                if (semver.gt(a, b)) {
+                    return -1
+                } else {
+                    return 1
+                }
+            })
+        if (directories[0]) {
+            properties.nodered = directories[0]
+        } else {
+            throw new Error('No Stacks Found')
+        }
+        return properties
     }
 }
