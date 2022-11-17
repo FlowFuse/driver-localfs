@@ -22,7 +22,8 @@
     "license": "Apache-2.0",
     "dependencies": {
         "@flowforge/nr-launcher": "^1.0.0",
-        "got": "^11.8.5"
+        "got": "^11.8.5",
+        "semver": "^7.3.8"
     },
     "devDependencies": {
         "eslint": "^8.25.0",
