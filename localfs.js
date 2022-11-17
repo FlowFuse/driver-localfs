@@ -520,23 +520,31 @@ module.exports = {
      */
     getDefaultStackProperties: () => {
         const properties = {
-            memory: 256
+            memory: 256,
+            ...this._app.config.driver.options?.default_stack
         }
 
-        const entries = fs.readdirSync(this._rootDir, { withFileTypes: true })
-        const directories = entries.filter(dir => dir.isDirectory())
-            .map(dir => dir.name)
-            .sort((a, b) => {
-                if (semver.gt(a, b)) {
-                    return -1
-                } else {
-                    return 1
-                }
-            })
-        if (directories[0]) {
-            properties.nodered = directories[0]
+        // allow stack value to be passing in from config
+        if (!properties.nodered) {
+            const entries = fs.readdirSync(this._rootDir, { withFileTypes: true })
+            const directories = entries.filter(dir => dir.isDirectory())
+                .map(dir => dir.name)
+                .sort((a, b) => {
+                    if (semver.gt(a, b)) {
+                        return -1
+                    } else {
+                        return 1
+                    }
+                })
+            if (directories[0]) {
+                properties.nodered = directories[0]
+            } else {
+                throw new Error('No Stacks Found')
+            }
         } else {
-            throw new Error('No Stacks Found')
+            if (!fs.existsSync(path.join(this._rootDir, properties.nodered))) {
+                throw new Error('No Stacks Found')
+            }
         }
         return properties
     }
