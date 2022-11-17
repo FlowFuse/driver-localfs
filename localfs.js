@@ -523,7 +523,7 @@ module.exports = {
             memory: 256
         }
 
-        const entries = fs.readdirSync(this._rootDir, {withFileTypes: true})
+        const entries = fs.readdirSync(this._rootDir, { withFileTypes: true })
         const directories = entries.filter(dir => dir.isDirectory())
             .map(dir => dir.name)
             .sort((a, b) => {
