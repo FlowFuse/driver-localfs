@@ -264,7 +264,7 @@ module.exports = {
         this._rootDir = path.resolve(app.config.home, 'var/projects')
         this._stackDir = path.resolve(app.config.home, 'var/stacks')
 
-        initialPortNumber = app.config.driver.options?.start_port || 7880
+        initialPortNumber = app.config.driver.options?.start_port || 12080
 
         logger = app.log
 

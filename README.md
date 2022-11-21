@@ -8,7 +8,7 @@ The following environment variables (in the `.env` file) configure this driver
 
  - CONTAINER_DRIVER=localfs
  - LOCALFS_ROOT=<path/to/store/project/userDirs>
- - LOCALFS_START_PORT=7880
+ - LOCALFS_START_PORT=12080
  - LOCALFS_NODE_PATH=<path/to/node/binary> (not required, but useful with nvm)
 
 ## Node-RED Versions for Stacks
