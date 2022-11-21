@@ -11,7 +11,7 @@
  */
 
 const fs = require('fs/promises')
-const { existsSync, openSync, close } = require('fs')
+const { existsSync, openSync, close, readdirSync } = require('fs')
 const got = require('got')
 const path = require('path')
 const semver = require('semver')
@@ -262,6 +262,7 @@ module.exports = {
         this._usedPorts = new Set()
         // TODO need a better way to find this location?
         this._rootDir = path.resolve(app.config.home, 'var/projects')
+        this._stackDir = path.resolve(app.config.home, 'var/stacks')
 
         initialPortNumber = app.config.driver.options?.start_port || 7880
 
@@ -526,9 +527,10 @@ module.exports = {
 
         // allow stack value to be passing in from config
         if (!properties.nodered) {
-            const entries = fs.readdirSync(this._rootDir, { withFileTypes: true })
-            const directories = entries.filter(dir => dir.isDirectory())
-                .map(dir => dir.name)
+            const entries = readdirSync(this._stackDir, { withFileTypes: true })
+            const directories = entries.filter(dir => {
+                return dir.isDirectory() && semver.valid(dir.name)
+            }).map(dir => dir.name)
                 .sort((a, b) => {
                     if (semver.gt(a, b)) {
                         return -1
@@ -539,11 +541,12 @@ module.exports = {
             if (directories[0]) {
                 properties.nodered = directories[0]
             } else {
-                throw new Error('No Stacks Found')
+                throw new Error(`No Stacks found in ${this._stackDir}`)
             }
         } else {
-            if (!fs.existsSync(path.join(this._rootDir, properties.nodered))) {
-                throw new Error('No Stacks Found')
+            const preconfiguredStack = path.join(this._stackDir, properties.nodered)
+            if (!fs.existsSync(preconfiguredStack)) {
+                throw new Error(`Stack not found: ${preconfiguredStack}`)
             }
         }
         return properties
