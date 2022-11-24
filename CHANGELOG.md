@@ -1,3 +1,10 @@
+#### 1.1.0: Release
+
+ - Change default start port (#72) @hardillb
+ - Fix detection of default stack (#71) @knolleary
+ - Add getDefaultStackProperties function (#70) @hardillb
+ - Add flags to permit TCP/UDP inbound connections (#69) @Steve-Mcl
+
 #### 1.0.0: Release
 
  - Update eslint and add default build action (#67) @knolleary
