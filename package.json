@@ -1,6 +1,6 @@
 {
     "name": "@flowforge/localfs",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "description": "Local Filesystem FlowForge Project driver",
     "main": "localfs.js",
     "scripts": {
@@ -21,7 +21,7 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
-        "@flowforge/nr-launcher": "^1.8.0",
+        "@flowforge/nr-launcher": "^1.9.0",
         "got": "^11.8.5",
         "semver": "^7.3.8"
     },
