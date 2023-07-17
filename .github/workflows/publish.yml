@@ -18,7 +18,7 @@ jobs:
       - name: Set nigthly release
         # if: ${{ github.event_name == 'schedule' }}
         run: echo "release_name=nightly" >> $GITHUB_ENV
-      - name: "Set versions"
+      - name: "Set dependecies versions"
         run: |
           npm version prerelease --preid `git rev-parse --short HEAD`-`date +%Y%m%d` --no-git-tag-version
           cat package.json | jq '.dependencies["@flowforge/nr-launcher"] = "${{ env.release_name }}"' > package.json-patched
