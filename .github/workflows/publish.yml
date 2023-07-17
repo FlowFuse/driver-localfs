@@ -1,5 +1,8 @@
 name: Publish
 on:
+  repository_dispatch:
+    types: 
+      - nr-launcher-trigger
   schedule:
     - cron: '0 23 * * *'
   push:
@@ -13,6 +16,8 @@ jobs:
       contents: read
       packages: write
     steps:
+      - name: debug payload
+        run: echo ${{ github.event.client_payload.nr_launcher_release_name }}
       - name: Checkout
         uses: actions/checkout@v3
       - name: Set nigthly release
