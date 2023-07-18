@@ -6,6 +6,9 @@ on:
         description: 'flowforge-nr-launcher package version'
         required: false
         default: 'nightly'
+      nr_launcher_ref:
+        description: 'flowforge-nr-launcher package ref'
+        required: false
   schedule:
     - cron: '0 23 * * *'
   push:
