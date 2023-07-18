@@ -1,8 +1,11 @@
 name: Publish
 on:
-  repository_dispatch:
-    types: 
-      - nr-launcher-trigger
+  workflow_dispatch:
+    inputs:
+      nr_launcher_release_name:
+        description: 'flowforge-nr-launcher package version'
+        required: false
+        default: 'nightly'
   schedule:
     - cron: '0 23 * * *'
   push:
