@@ -1,3 +1,7 @@
+#### 1.9.2: Release
+
+ - Update to @flowforge/nr-launcher@01.9.2
+
 #### 1.9.0: Release
 
  - Add package-lock.json (#82) @Pezmc
