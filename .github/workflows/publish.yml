@@ -16,7 +16,7 @@ on:
     branches:
       - 'feat-*' 
 
-      
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -29,6 +29,7 @@ jobs:
         run: echo "release_name=nightly" >> $GITHUB_ENV
   
   publish:
+    needs: prepare
     permissions:
       contents: read
       packages: write
