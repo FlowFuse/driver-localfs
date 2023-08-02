@@ -1,4 +1,5 @@
-name: Publish
+name: Build and push package
+
 on:
   workflow_dispatch:
     inputs:
@@ -16,27 +17,31 @@ on:
       - 'feat-*' 
 
 jobs:
-  publish:
+  prepare:
     runs-on: ubuntu-latest
+    outputs:
+      release_name: ${{ steps.set_release.outputs.release_name }}
+    steps:
+      - name: Set nigthly release
+        id: set_release
+        # if: ${{ github.event_name == 'schedule' }}
+        run: echo "release_name=nightly" >> $GITHUB_ENV
+  
+  publish:
     permissions:
       contents: read
       packages: write
+    uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@feat-npm-publish-workflow'
+    with:
+      release_name: ${{ needs.prepare.outputs.release_name}}
+      package_name: flowforge-driver-localfs
+      package_dependencies: |
+        @flowforge/nr-launcher
+        
+  dispatch:
+    runs-on: ubuntu-latest
+    if: false
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set nigthly release
-        # if: ${{ github.event_name == 'schedule' }}
-        run: echo "release_name=nightly" >> $GITHUB_ENV
-
-      - name: Build and publish package
-        uses: flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@feat-npm-publish-workflow
-        with:
-          release_name: ${{ env.release_name }}
-          package_name: flowforge-driver-localfs
-          package_dependencies: |
-            @flowforge/nr-launcher
-
       - name: Generate a token
         id: generate_token
         uses: tibdex/github-app-token@v1
@@ -45,7 +50,6 @@ jobs:
           private_key: ${{ secrets.GH_BOT_APP_KEY }}
 
       - name: Trigger flowforge package rebuild
-        if: false
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: publish.yml
