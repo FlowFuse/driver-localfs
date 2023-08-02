@@ -26,7 +26,7 @@ jobs:
       - name: Set nigthly release
         id: set_release
         # if: ${{ github.event_name == 'schedule' }}
-        run: echo "release_name=nightly" >> $GITHUB_ENV
+        run: echo "release_name=nightly" >> $GITHUB_OUTPUT
   
   publish:
     needs: prepare
