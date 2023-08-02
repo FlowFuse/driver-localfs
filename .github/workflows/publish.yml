@@ -24,28 +24,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
       - name: Set nigthly release
         # if: ${{ github.event_name == 'schedule' }}
         run: echo "release_name=nightly" >> $GITHUB_ENV
-      - name: "Set dependecies versions"
-        run: |
-          npm version prerelease --preid `git rev-parse --short HEAD`-`date +%Y%m%d` --no-git-tag-version
-          cat package.json | jq '.dependencies["@flowforge/nr-launcher"] = "${{ env.release_name }}"' > package.json-patched
-          mv package.json-patched package.json
-      - name: "publish flowforge-driver-localfs"
-        uses: JS-DevTools/npm-publish@v2
+
+      - name: Build and publish package
+        uses: flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@feat-npm-publish-workflow
         with:
-          tag: ${{ env.release_name }}
-          package: ./package.json
-          registry: https://npm.pkg.github.com
-          token: ${{ secrets.GITHUB_TOKEN }}
+          release_name: ${{ env.release_name }}
+          package_name: flowforge-driver-localfs
+          package_dependencies: |
+            @flowforge/nr-launcher
+
       - name: Generate a token
         id: generate_token
         uses: tibdex/github-app-token@v1
         with:
           app_id: ${{ secrets.GH_BOT_APP_ID }}
           private_key: ${{ secrets.GH_BOT_APP_KEY }}
+
       - name: Trigger flowforge package rebuild
+        if: false
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: publish.yml
