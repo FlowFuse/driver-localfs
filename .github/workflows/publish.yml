@@ -18,33 +18,27 @@ on:
 
 
 jobs:
-  # prepare:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     release_name: ${{ steps.set_release.outputs.release_name }}
-  #   steps:
-  #     - name: Set nigthly release
-  #       id: set_release
-  #       # if: ${{ github.event_name == 'schedule' }}
-  #       run: echo "release_name=nightly" >> $GITHUB_OUTPUT
-  
-  publish:
-    # needs: prepare
+  prepare:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    outputs:
+      release_name: ${{ steps.set_release.outputs.release_name }}
     steps:
       - name: Set nigthly release
         id: set_release
         # if: ${{ github.event_name == 'schedule' }}
         run: echo "release_name=nightly" >> $GITHUB_OUTPUT
-      - uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@feat-npm-publish-workflow'
-        with:
-          release_name: ${{ needs.prepare.outputs.release_name}}
-          package_name: flowforge-driver-localfs
-          package_dependencies: |
-            @flowforge/nr-launcher
+  
+  publish:
+    needs: prepare
+    permissions:
+      contents: read
+      packages: write
+    uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@feat-npm-publish-workflow'
+    with:
+      release_name: ${{ needs.prepare.outputs.release_name}}
+      package_name: flowforge-driver-localfs
+      package_dependencies: |
+        @flowforge/nr-launcher
         
   dispatch:
     runs-on: ubuntu-latest
