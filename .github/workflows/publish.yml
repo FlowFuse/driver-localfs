@@ -14,33 +14,31 @@ on:
     - cron: '0 23 * * *'
   push:
     branches:
-      - 'feat-*' 
+      - 'feat-*'
+      - 'main'
 
 
 jobs:
-    # prepare:
-    # runs-on: ubuntu-latest
-    # outputs:
-    #   release_name: ${{ steps.set_release.outputs.release_name }}
-    # steps:
-    #   - name: Set nigthly release
-    #     id: set_release
-    #     if: ${{ github.event_name == 'schedule' }}
-    # run: echo "release_name=nightly" >> $GITHUB_OUTPUT
-  
   package:
     permissions:
       contents: read
       packages: write
-    uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@feat-npm-publish-workflow'
+    uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@feat-npm-publish-outputs'
     with:
-      # release_name: ${{ needs.prepare.outputs.release_name}}
       package_name: flowforge-driver-localfs
       package_dependencies: |
         @flowforge/nr-launcher
-        
+  
+  debug:
+    runs-on: ubuntu-latest
+    needs: package
+    steps:
+      - name: Print release name
+        run: echo ${{ needs.package.outputs.release_name }}
+
   dispatch:
     runs-on: ubuntu-latest
+    needs: package
     if: false
     steps:
       - name: Generate a token
@@ -57,4 +55,4 @@ jobs:
           repo: flowforge/flowforge
           ref: feat-publish-pipeline-poc
           token: ${{ steps.generate_token.outputs.token }}
-          inputs: '{"localfs_ref": "${{ github.ref }}", "localfs_release_name": "${{ env.release_name }}"}'
+          inputs: '{"localfs_ref": "${{ github.ref }}", "localfs_release_name": "${{ needs.package.outputs.release_name }}"}'
