@@ -36,6 +36,7 @@ jobs:
       - name: Print release name from package job
         run: echo ${{ needs.package.outputs.release_name }}
 
+
   dispatch:
     runs-on: ubuntu-latest
     needs: package
