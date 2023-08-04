@@ -23,7 +23,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@feat-npm-publish-outputs'
+    uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@main'
     with:
       package_name: flowforge-driver-localfs
       package_dependencies: |
