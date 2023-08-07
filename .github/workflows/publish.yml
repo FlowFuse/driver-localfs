@@ -17,8 +17,7 @@ on:
       - main
   push:
     branches:
-      - 'feat-*'
-      - 'main'
+      - main
 
 
 jobs:
@@ -26,6 +25,7 @@ jobs:
     uses: 'flowforge/github-actions-workflows/.github/workflows/build_node_package.yml@main'
 
   publish:
+    needs: build
     permissions:
       contents: read
       packages: write
