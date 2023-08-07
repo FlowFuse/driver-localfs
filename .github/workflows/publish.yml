@@ -56,3 +56,4 @@ jobs:
           ref: feat-publish-pipeline-poc
           token: ${{ steps.generate_token.outputs.token }}
           inputs: '{"localfs_ref": "${{ github.ref }}", "localfs_release_name": "${{ needs.package.outputs.release_name }}"}'
+          
