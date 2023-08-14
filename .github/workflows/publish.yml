@@ -26,9 +26,9 @@ jobs:
 
   publish:
     needs: build
-    permissions:
-      contents: read
-      packages: write
+    if: |
+      ( github.event_name == 'push' && github.ref == 'refs/heads/main' ) ||
+      github.event_name == 'schedule'
     uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@main'
     with:
       package_name: flowforge-driver-localfs
