@@ -1,5 +1,4 @@
 name: Build and push package
-
 on:
   workflow_dispatch:
     inputs:
