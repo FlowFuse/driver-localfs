@@ -27,7 +27,7 @@ jobs:
     needs: build
     if: |
       ( github.event_name == 'push' && github.ref == 'refs/heads/main' ) ||
-      github.event_name == 'workflow_dispatch' ||
+      ( github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' ) ||
       github.event_name == 'schedule'
     uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@main'
     with:
@@ -36,7 +36,8 @@ jobs:
       package_dependencies: |
         @flowforge/nr-launcher
 
-  dispatch_flowforge_build:
+  dispatch:
+    name: Dispatch flowforge package build
     runs-on: ubuntu-latest
     needs: publish
     steps:
