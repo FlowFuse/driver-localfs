@@ -1,3 +1,10 @@
+#### 1.11.0: Release
+
+ - Enable flowforge package build dispatcher after package publish (#90) @ppawlowski
+ - Bump word-wrap from 1.2.3 to 1.2.5 (#89) @app/dependabot
+ - FIX: Allow publish only when changes are pushed to `main` branch (#88) @ppawlowski
+ - Introduce publish pipeline (#85) @ppawlowski
+
 #### 1.10.0: Release
 
 
