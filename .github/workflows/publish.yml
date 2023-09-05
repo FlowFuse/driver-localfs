@@ -9,8 +9,6 @@ on:
       nr_launcher_ref:
         description: 'flowforge-nr-launcher package ref'
         required: false
-  schedule:
-    - cron: '0 23 * * *'
   pull_request:
     branches: 
       - main
