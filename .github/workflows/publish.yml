@@ -23,16 +23,17 @@ jobs:
 
   publish:
     needs: build
-    if: |
-      ( github.event_name == 'push' && github.ref == 'refs/heads/main' ) ||
-      ( github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' ) ||
-      github.event_name == 'schedule'
-    uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@main'
+    # if: |
+    #   ( github.event_name == 'push' && github.ref == 'refs/heads/main' ) ||
+    #   ( github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' )
+    uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@feat-configurable-npm-registry'
     with:
       package_name: flowforge-driver-localfs
       publish_package: true
       package_dependencies: |
         @flowforge/nr-launcher
+    secrets:
+      npm_registry_token: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
   dispatch:
     name: Dispatch flowforge package build
