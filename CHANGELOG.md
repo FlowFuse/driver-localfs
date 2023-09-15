@@ -1,3 +1,9 @@
+#### 1.11.1: Release
+
+ - Pin reusable workflow to commit SHA (#93) @ppawlowski
+ - Disable scheduled package build (#92) @ppawlowski
+ - Update to @flowforge/nr-launcher@1.11.1
+
 #### 1.11.0: Release
 
  - Enable flowforge package build dispatcher after package publish (#90) @ppawlowski
