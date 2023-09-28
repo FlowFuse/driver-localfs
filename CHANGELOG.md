@@ -1,3 +1,7 @@
+#### 1.12.0: Release
+
+ - Publish nightly package to npmjs (#96) @ppawlowski
+
 #### 1.11.1: Release
 
  - Pin reusable workflow to commit SHA (#93) @ppawlowski
