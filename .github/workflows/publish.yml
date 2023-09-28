@@ -19,14 +19,14 @@ on:
 
 jobs:
   build:
-    uses: 'flowforge/github-actions-workflows/.github/workflows/build_node_package.yml@e3e734b910af78371b2c9a1c6856446d17421f50'
+    uses: 'flowfuse/github-actions-workflows/.github/workflows/build_node_package.yml@e3e734b910af78371b2c9a1c6856446d17421f50'
 
   publish:
     needs: build
     if: |
       ( github.event_name == 'push' && github.ref == 'refs/heads/main' ) ||
       ( github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' )
-    uses: 'flowforge/github-actions-workflows/.github/workflows/publish_node_package.yml@5e57b30ac6ed8478406b3b3f2780241d2f4dcd8f'
+    uses: 'flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml@5e57b30ac6ed8478406b3b3f2780241d2f4dcd8f'
     with:
       package_name: flowforge-driver-localfs
       publish_package: true
@@ -36,7 +36,7 @@ jobs:
       npm_registry_token: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
   dispatch:
-    name: Dispatch flowforge package build
+    name: Dispatch flowfuse package build
     runs-on: ubuntu-latest
     needs: publish
     steps:
@@ -51,7 +51,7 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: publish.yml
-          repo: flowforge/flowforge
+          repo: flowfuse/flowfuse
           ref: main
           token: ${{ steps.generate_token.outputs.token }}
           inputs: '{"localfs_ref": "${{ github.ref }}", "localfs_release_name": "${{ needs.package.outputs.release_name }}"}'
