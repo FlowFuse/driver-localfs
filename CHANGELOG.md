@@ -1,3 +1,9 @@
+#### 1.13.0: Release
+
+ - Pin reusable workflows to v0.1.0 (#100) @ppawlowski
+ - Update ff references in package.json (#99) @knolleary
+ - Change repo references in workflows after github org rename (#97) @ppawlowski
+
 #### 1.12.0: Release
 
  - Publish nightly package to npmjs (#96) @ppawlowski
