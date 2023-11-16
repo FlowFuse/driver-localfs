@@ -1,5 +1,6 @@
 #### 1.13.3: Release
 
+ - Bump to v1.13.3 release @hardillb
 
 #### 1.13.0: Release
 
