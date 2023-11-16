@@ -1,3 +1,7 @@
+#### 1.13.3: Release
+
+ - Bump to v1.13.3 release @hardillb
+
 #### 1.13.0: Release
 
  - Pin reusable workflows to v0.1.0 (#100) @ppawlowski
