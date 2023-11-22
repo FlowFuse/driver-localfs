@@ -33,12 +33,12 @@ function getNextFreePort (ports) {
 
 async function createUserDirIfNeeded (userDir) {
     if (!existsSync(userDir)) {
-        logger.info(`Creating project directory: ${userDir}`)
+        logger.info(`Creating settings directory: ${userDir}`)
         await fs.mkdir(userDir)
         await fs.mkdir(path.join(userDir, 'node_modules'))
         const packageJSON = {
-            name: 'flowforge-node-red-project',
-            description: 'A FlowForge Node-RED Project',
+            name: 'flowfuse-node-red-project',
+            description: 'A FlowFuse Node-RED Instance',
             version: '0.0.1',
             private: true
         }
@@ -120,13 +120,14 @@ async function startProject (app, project, ProjectStack, userDir, port) {
     let execPath
     for (let i = 0; i < module.paths.length; i++) {
         // execPath = path.join(process.mainModule.paths[i], `.bin/flowforge-node-red${ext}`)
-        execPath = path.join(module.paths[i], '@flowforge/nr-launcher/index.js')
+        execPath = path.join(module.paths[i], '@flowfuse/nr-launcher/index.js')
         if (existsSync(execPath)) {
             break
         }
+        execPath = null
     }
     if (!execPath) {
-        logger.info('Can not find flowforge-node-red executable, no way to start projects')
+        logger.info('Can not find flowfuse-node-red executable, no way to start projects')
         process.exit(1)
     }
 
