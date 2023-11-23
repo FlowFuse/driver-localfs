@@ -1,3 +1,7 @@
+#### 1.14.0: Release
+
+ - Update nr-launcher reference to new flowfuse scoped module (#103) @knolleary
+
 #### 1.13.3: Release
 
  - Bump to v1.13.3 release @hardillb
