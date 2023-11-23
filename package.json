@@ -1,6 +1,6 @@
 {
     "name": "@flowfuse/localfs",
-    "version": "1.13.3",
+    "version": "1.14.0",
     "description": "Local Filesystem FlowFuse Project driver",
     "main": "localfs.js",
     "scripts": {
@@ -21,7 +21,7 @@
     },
     "license": "Apache-2.0",
     "dependencies": {
-        "@flowfuse/nr-launcher": "^1.13.3",
+        "@flowfuse/nr-launcher": "^1.14.0",
         "got": "^11.8.5",
         "semver": "^7.3.8"
     },
