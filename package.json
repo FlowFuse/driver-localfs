@@ -1,5 +1,5 @@
 {
-    "name": "@flowfuse/localfs",
+    "name": "@flowforge/localfs",
     "version": "1.14.0",
     "description": "Local Filesystem FlowFuse Project driver",
     "main": "localfs.js",
