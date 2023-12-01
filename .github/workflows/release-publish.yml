@@ -13,6 +13,6 @@ jobs:
         with:
           node-version: 16
       - run: npm ci --omit=dev
-      - uses: JS-DevTools/npm-publish@v1
+      - uses: JS-DevTools/npm-publish@v2
         with:
           token: ${{ secrets.NPM_PUBLISH_TOKEN }}
