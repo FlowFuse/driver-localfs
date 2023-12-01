@@ -4,12 +4,19 @@ This will start/stop/monitor Node-RED instances and build separate useDirs for e
 
 ## Configure
 
-The following environment variables (in the `.env` file) configure this driver
+In the `flowforge.yml` file the following options can be set under the `drive.options` section
 
- - CONTAINER_DRIVER=localfs
- - LOCALFS_ROOT=<path/to/store/project/userDirs>
- - LOCALFS_START_PORT=12080
- - LOCALFS_NODE_PATH=<path/to/node/binary> (not required, but useful with nvm)
+```yaml
+...
+driver:
+  type: localfs
+  options:
+    start_port: 12080
+    privateCA: /full/path/to/chain.pem
+```
+
+ - `start_port` Port number to start from when creating Instances (default: 12080)
+ - `privateCA` is a fully qaulified path to a pem file containing trusted CA cert chain (default: not set)
 
 ## Node-RED Versions for Stacks
 
