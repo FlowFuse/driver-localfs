@@ -1,3 +1,11 @@
+#### 1.15.0: Release
+
+ - Options might be empty (#110) @hardillb
+ - Update npm-publish action version to v2 (#109) @ppawlowski
+ - Add support for privateCA config (#108) @hardillb
+ - Update package-lock file (#107) @knolleary
+ - Update package to new scope (#106) @knolleary
+
 #### 1.14.0: Release
 
  - Update nr-launcher reference to new flowfuse scoped module (#103) @knolleary
