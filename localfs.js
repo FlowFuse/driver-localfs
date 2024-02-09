@@ -72,7 +72,7 @@ async function startProject (app, project, ProjectStack, userDir, port) {
         env.FORGE_LICENSE_TYPE = 'ee'
     }
 
-    if (this._options.logPassthrough) {
+    if (this._options?.logPassthrough) {
         env.FORGE_LOG_PASSTHROUGH = 'true'
     }
 
