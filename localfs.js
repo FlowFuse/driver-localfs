@@ -72,6 +72,10 @@ async function startProject (app, project, ProjectStack, userDir, port) {
         env.FORGE_LICENSE_TYPE = 'ee'
     }
 
+    if (this._options?.logPassthrough) {
+        env.FORGE_LOG_PASSTHROUGH = 'true'
+    }
+
     if (app.config.node_path) {
         env.PATH = process.env.PATH + path.delimiter + app.config.node_path
     } else {

@@ -13,10 +13,12 @@ driver:
   options:
     start_port: 12080
     privateCA: /full/path/to/chain.pem
+    logPassthrough: true
 ```
 
  - `start_port` Port number to start from when creating Instances (default: 12080)
  - `privateCA` is a fully qaulified path to a pem file containing trusted CA cert chain (default: not set)
+ - `logPassthrough` Have Node-RED logs printed in JSON format to container stdout (default false)
 
 ## Node-RED Versions for Stacks
 
