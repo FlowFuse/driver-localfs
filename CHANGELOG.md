@@ -1,3 +1,7 @@
+#### 2.1.1: Release
+
+ - Update nr-launcher to 2.1.1 @knolleary
+
 #### 2.1.0: Release
 
  - A log passthrough support (#114) @hardillb
