@@ -83,7 +83,7 @@ async function startProject (app, project, ProjectStack, userDir, port) {
     }
 
     // fully qualified path to ca.pem file
-    if (app.config.driver.options?.privateCA && fs.existsSync(this._app.config.driver.options?.privateCA)) {
+    if (app.config.driver.options?.privateCA && existsSync(app.config.driver.options?.privateCA)) {
         env.NODE_EXTRA_CA_CERTS = app.config.driver.options?.privateCA
     }
 
