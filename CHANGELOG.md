@@ -1,3 +1,8 @@
+#### 2.2.0: Release
+
+ - Private ca typo (#118) @hardillb
+ - Bump jsonata and @node-red/util (#117) @app/dependabot
+
 #### 2.1.1: Release
 
  - Update nr-launcher to 2.1.1 @knolleary
