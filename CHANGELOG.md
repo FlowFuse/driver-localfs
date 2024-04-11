@@ -1,3 +1,7 @@
+#### 2.3.0: Release
+
+ - Bump express from 4.18.2 to 4.19.2 (#121) @app/dependabot
+
 #### 2.2.1: Release
 
 
