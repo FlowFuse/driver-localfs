@@ -426,6 +426,7 @@ module.exports = {
             settings.rootDir = this._rootDir
             settings.userDir = project.id
             settings.port = await project.getSetting('port')
+            settings.healthCheckInterval = await project.getSetting('healthCheckInterval')
             settings.env = {
                 NODE_PATH: path.join(this._app.config.home, 'app', 'node_modules')
             }
