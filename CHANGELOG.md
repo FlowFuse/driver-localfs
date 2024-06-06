@@ -1,3 +1,9 @@
+#### 2.5.0: Release
+
+ - Bump actions/setup-node from 1 to 4 (#128) @app/dependabot
+ - Bump actions/checkout from 1 to 4 (#127) @app/dependabot
+ - Enable dependabot for github actions (#126) @ppawlowski
+
 #### 2.4.0: Release
 
 
