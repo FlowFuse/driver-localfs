@@ -47,6 +47,7 @@ async function createUserDirIfNeeded (userDir) {
             JSON.stringify(packageJSON)
         )
     }
+    // "upgrade" exiting projects
     if (!existsSync(path.join(userDir), 'storage')) {
         await fs.mkdir(path.join(userDir), 'storage')
     }
