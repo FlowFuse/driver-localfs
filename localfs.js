@@ -36,6 +36,7 @@ async function createUserDirIfNeeded (userDir) {
         logger.info(`Creating settings directory: ${userDir}`)
         await fs.mkdir(userDir)
         await fs.mkdir(path.join(userDir, 'node_modules'))
+        await fs.mkdir(path.join(userDir, 'storage'))
         const packageJSON = {
             name: 'flowfuse-node-red-project',
             description: 'A FlowFuse Node-RED Instance',
@@ -45,6 +46,10 @@ async function createUserDirIfNeeded (userDir) {
         await fs.writeFile(path.join(userDir, 'package.json'),
             JSON.stringify(packageJSON)
         )
+    }
+    // "upgrade" exiting projects
+    if (!existsSync(path.join(userDir, 'storage'))) {
+        await fs.mkdir(path.join(userDir, 'storage'))
     }
 }
 
