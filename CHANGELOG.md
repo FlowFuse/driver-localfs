@@ -1,3 +1,8 @@
+#### 2.6.0: Release
+
+ - Ensure userDir/storage is created (#135) @hardillb
+ - ci: Bump build_node_package workflow to 0.14.0 (#133) @ppawlowski
+
 #### 2.5.0: Release
 
  - Bump actions/setup-node from 1 to 4 (#128) @app/dependabot
