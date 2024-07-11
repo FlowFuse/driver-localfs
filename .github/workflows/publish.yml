@@ -52,6 +52,13 @@ jobs:
           private_key: ${{ secrets.GH_BOT_APP_KEY }}
 
       - name: Trigger flowfuse package build
+        run: |
+          gh workflow run --repo flowfuse/flowfuse --ref main publish.yml -f localfs_ref="${{ github.ref }}" -f localfs_release_name="${{ needs.publish.outputs.release_name }}"
+        env:
+          GITHUB_TOKEN: ${{ steps.generate_token.outputs.token }}
+
+      - name: Trigger flowfuse package build
+        if: false
         uses: benc-uk/workflow-dispatch@v1.2.3
         with:
           workflow: publish.yml
