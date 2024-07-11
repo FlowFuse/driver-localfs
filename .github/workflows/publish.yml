@@ -27,9 +27,9 @@ jobs:
 
   publish:
     needs: build
-    if: |
-      ( github.event_name == 'push' && github.ref == 'refs/heads/main' ) ||
-      ( github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' )
+    # if: |
+    #   ( github.event_name == 'push' && github.ref == 'refs/heads/main' ) ||
+    #   ( github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' )
     uses: 'flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml@v0.1.0'
     with:
       package_name: driver-localfs
@@ -52,7 +52,7 @@ jobs:
           private_key: ${{ secrets.GH_BOT_APP_KEY }}
 
       - name: Trigger flowfuse package build
-        uses: benc-uk/workflow-dispatch@v1
+        uses: benc-uk/workflow-dispatch@v1.2.3
         with:
           workflow: publish.yml
           repo: flowfuse/flowfuse
