@@ -1,3 +1,11 @@
+#### 2.7.0: Release
+
+ - Bump tibdex/github-app-token from 1 to 2 (#131) @app/dependabot
+ - ci: Change workflow trigger approach (#140) @ppawlowski
+ - Update release publish to use NodeJS v18 (#139) @hardillb
+ - Bump ws from 7.5.9 to 7.5.10 (#136) @app/dependabot
+ - Bump JS-DevTools/npm-publish from 2 to 3 (#130) @app/dependabot
+
 #### 2.6.0: Release
 
  - Ensure userDir/storage is created (#135) @hardillb
