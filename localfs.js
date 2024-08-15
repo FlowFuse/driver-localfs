@@ -11,6 +11,7 @@
  */
 
 const fs = require('fs/promises')
+const FormData = require('form-data')
 const { existsSync, openSync, close, readdirSync } = require('fs')
 const got = require('got')
 const path = require('path')
@@ -578,9 +579,8 @@ module.exports = {
             throw new Error('Cannot access instance files')
         }
         const fileUrl = await getStaticFileUrl(instance, filePath)
-        console.log('GET', fileUrl)
         try {
-            return await got.get(fileUrl).json()
+            return got.get(fileUrl).json()
         } catch (err) {
             err.statusCode = err.response.statusCode
             throw err
@@ -593,7 +593,7 @@ module.exports = {
         }
         const fileUrl = await getStaticFileUrl(instance, filePath)
         try {
-            return await got.put(fileUrl, {
+            return got.put(fileUrl, {
                 json: update
             })
         } catch (err) {
@@ -608,7 +608,40 @@ module.exports = {
         }
         const fileUrl = await getStaticFileUrl(instance, filePath)
         try {
-            return await got.delete(fileUrl)
+            return got.delete(fileUrl)
+        } catch (err) {
+            err.statusCode = err.response.statusCode
+            throw err
+        }
+    },
+    createDirectory: async (instance, filePath, directoryName) => {
+        if (this._projects[instance.id] === undefined) {
+            throw new Error('Cannot access instance files')
+        }
+        if (this._projects[instance.id] === undefined) {
+            throw new Error('Cannot access instance files')
+        }
+        const fileUrl = await getStaticFileUrl(instance, filePath)
+        try {
+            return got.post(fileUrl, {
+                json: { path: directoryName }
+            })
+        } catch (err) {
+            err.statusCode = err.response.statusCode
+            throw err
+        }
+    },
+    uploadFile: async (instance, filePath, fileBuffer) => {
+        if (this._projects[instance.id] === undefined) {
+            throw new Error('Cannot access instance files')
+        }
+        const form = new FormData()
+        form.append('file', fileBuffer, { filename: filePath })
+        const fileUrl = await getStaticFileUrl(instance, filePath)
+        try {
+            return got.post(fileUrl, {
+                body: form
+            })
         } catch (err) {
             err.statusCode = err.response.statusCode
             throw err
