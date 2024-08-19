@@ -618,9 +618,6 @@ module.exports = {
         if (this._projects[instance.id] === undefined) {
             throw new Error('Cannot access instance files')
         }
-        if (this._projects[instance.id] === undefined) {
-            throw new Error('Cannot access instance files')
-        }
         const fileUrl = await getStaticFileUrl(instance, filePath)
         try {
             return got.post(fileUrl, {
