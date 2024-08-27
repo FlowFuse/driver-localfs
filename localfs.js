@@ -266,7 +266,7 @@ async function checkExistingProjects (driver) {
 
 async function getStaticFileUrl (project, filePath) {
     const port = await project.getSetting('port')
-    return `http://localhost:${port + 1000}/flowforge/files/_/${filePath}`
+    return `http://localhost:${port + 1000}/flowforge/files/_/${encodeURIComponent(filePath)}`
 }
 
 module.exports = {
