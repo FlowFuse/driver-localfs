@@ -11,6 +11,7 @@
  */
 
 const fs = require('fs/promises')
+const FormData = require('form-data')
 const { existsSync, openSync, close, readdirSync } = require('fs')
 const got = require('got')
 const path = require('path')
@@ -219,7 +220,7 @@ async function getProjectList (driver) {
 }
 
 async function checkExistingProjects (driver) {
-    logger.debug('[localfs] Checking project status')
+    logger.debug('[localfs] Checking instance status')
 
     const projects = await getProjectList(driver)
     projects.forEach(async (project) => {
@@ -229,7 +230,7 @@ async function checkExistingProjects (driver) {
             return
         }
 
-        logger.debug(`[localfs] Project ${project.id} port ${projectSettings.port}`)
+        logger.debug(`[localfs] Instance ${project.id} port ${projectSettings.port}`)
 
         const directory = path.join(driver._rootDir, project.id)
         await createUserDirIfNeeded(directory)
@@ -242,7 +243,7 @@ async function checkExistingProjects (driver) {
             }).json()
             if (project.id !== info.id) {
                 // Running project doesn't match db
-                logger.warn(`[localfs] Project ${project.id} expected on port ${projectSettings.port}. Found ${info.id}`)
+                logger.warn(`[localfs] Instance ${project.id} expected on port ${projectSettings.port}. Found ${info.id}`)
                 // TODO should do something here...
             } else {
                 driver._projects[project.id] = {
@@ -250,7 +251,7 @@ async function checkExistingProjects (driver) {
                 }
             }
         } catch (err) {
-            logger.info(`Starting project ${project.id} on port ${projectSettings.port}`)
+            logger.info(`Starting instance ${project.id} on port ${projectSettings.port}`)
 
             const projectStack = await project.getProjectStack()
 
@@ -261,6 +262,11 @@ async function checkExistingProjects (driver) {
             }
         }
     })
+}
+
+async function getStaticFileUrl (project, filePath) {
+    const port = await project.getSetting('port')
+    return `http://localhost:${port + 1000}/flowforge/files/_/${encodeURIComponent(filePath)}`
 }
 
 module.exports = {
@@ -387,7 +393,7 @@ module.exports = {
             try {
                 await fs.rm(projectSettings.path, { recursive: true, force: true })
             } catch (error) {
-                logger.warn(`Error removing project files: ${projectSettings.path}`)
+                logger.warn(`Error removing instance files: ${projectSettings.path}`)
             }
         }, 5000)
 
@@ -449,7 +455,7 @@ module.exports = {
      */
     startFlows: async (project) => {
         if (this._projects[project.id] === undefined) {
-            throw new Error('Project cannot start flows')
+            throw new Error('Instance cannot start flows')
         }
         const port = await project.getSetting('port')
         await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
@@ -465,7 +471,7 @@ module.exports = {
    */
     stopFlows: async (project) => {
         if (this._projects[project.id] === undefined) {
-            throw new Error('Project cannot stop flows')
+            throw new Error('Instance cannot stop flows')
         }
         const port = await project.getSetting('port')
         await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
@@ -481,7 +487,7 @@ module.exports = {
    */
     restartFlows: async (project) => {
         if (this._projects[project.id] === undefined) {
-            throw new Error('Project cannot restart flows')
+            throw new Error('Instance cannot restart flows')
         }
         const port = await project.getSetting('port')
         await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
@@ -499,7 +505,7 @@ module.exports = {
     revokeUserToken: async (project, token) => { // logout:nodered(step-3)
         const port = await project.getSetting('port')
         try {
-            this._app.log.debug(`[localfs] Project ${project.id} - logging out node-red instance`)
+            this._app.log.debug(`[localfs] Instance ${project.id} - logging out node-red instance`)
             await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', { // logout:nodered(step-4)
                 json: {
                     cmd: 'logout',
@@ -518,7 +524,7 @@ module.exports = {
    */
     logs: async (project) => {
         if (this._projects[project.id] === undefined) {
-            throw new Error('Cannot get project logs')
+            throw new Error('Cannot get instance logs')
         }
         const port = await project.getSetting('port')
         const result = await got.get('http://localhost:' + (port + 1000) + '/flowforge/logs').json()
@@ -565,5 +571,77 @@ module.exports = {
             }
         }
         return properties
+    },
+
+    // Static Assets API
+    listFiles: async (instance, filePath) => {
+        if (this._projects[instance.id] === undefined) {
+            throw new Error('Cannot access instance files')
+        }
+        const fileUrl = await getStaticFileUrl(instance, filePath)
+        try {
+            return got.get(fileUrl).json()
+        } catch (err) {
+            err.statusCode = err.response.statusCode
+            throw err
+        }
+    },
+
+    updateFile: async (instance, filePath, update) => {
+        if (this._projects[instance.id] === undefined) {
+            throw new Error('Cannot access instance files')
+        }
+        const fileUrl = await getStaticFileUrl(instance, filePath)
+        try {
+            return got.put(fileUrl, {
+                json: update
+            })
+        } catch (err) {
+            err.statusCode = err.response.statusCode
+            throw err
+        }
+    },
+
+    deleteFile: async (instance, filePath) => {
+        if (this._projects[instance.id] === undefined) {
+            throw new Error('Cannot access instance files')
+        }
+        const fileUrl = await getStaticFileUrl(instance, filePath)
+        try {
+            return got.delete(fileUrl)
+        } catch (err) {
+            err.statusCode = err.response.statusCode
+            throw err
+        }
+    },
+    createDirectory: async (instance, filePath, directoryName) => {
+        if (this._projects[instance.id] === undefined) {
+            throw new Error('Cannot access instance files')
+        }
+        const fileUrl = await getStaticFileUrl(instance, filePath)
+        try {
+            return got.post(fileUrl, {
+                json: { path: directoryName }
+            })
+        } catch (err) {
+            err.statusCode = err.response.statusCode
+            throw err
+        }
+    },
+    uploadFile: async (instance, filePath, fileBuffer) => {
+        if (this._projects[instance.id] === undefined) {
+            throw new Error('Cannot access instance files')
+        }
+        const form = new FormData()
+        form.append('file', fileBuffer, { filename: filePath })
+        const fileUrl = await getStaticFileUrl(instance, filePath)
+        try {
+            return got.post(fileUrl, {
+                body: form
+            })
+        } catch (err) {
+            err.statusCode = err.response.statusCode
+            throw err
+        }
     }
 }
