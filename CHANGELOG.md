@@ -1,3 +1,7 @@
+#### 2.8.0: Release
+
+ - Add initial file api (#144) @knolleary
+
 #### 2.7.0: Release
 
  - Bump tibdex/github-app-token from 1 to 2 (#131) @app/dependabot
