@@ -1,3 +1,10 @@
+#### 2.9.0: Release
+
+ - Bump flowfuse/github-actions-workflows from 0.29.0 to 0.30.0 (#151) @app/dependabot
+ - Bump serve-static and express (#148) @app/dependabot
+ - Bump flowfuse/github-actions-workflows from 0.28.0 to 0.29.0 (#147) @app/dependabot
+ - Bump flowfuse/github-actions-workflows from 0.1.0 to 0.28.0 (#146) @app/dependabot
+
 #### 2.8.0: Release
 
  - Add initial file api (#144) @knolleary
