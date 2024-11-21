@@ -1,3 +1,7 @@
+#### 2.11.0: Release
+
+ - Bump flowfuse/github-actions-workflows from 0.36.0 to 0.37.0 (#158)
+
 #### 2.10.0: Release
 
  - Bump flowfuse/github-actions-workflows from 0.34.0 to 0.36.0 (#156)
