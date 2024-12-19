@@ -1,3 +1,8 @@
+#### 2.12.0: Release
+
+ - Bump flowfuse/github-actions-workflows from 0.37.0 to 0.38.0 (#160)
+ - Bump path-to-regexp and express (#161) @app/dependabot
+
 #### 2.11.0: Release
 
  - Bump flowfuse/github-actions-workflows from 0.36.0 to 0.37.0 (#158)
