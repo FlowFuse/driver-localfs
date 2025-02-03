@@ -281,7 +281,7 @@ async function checkExistingProjects (driver) {
     })
 }
 
-async function checkExistingMQTTAgents(driver) {
+async function checkExistingMQTTAgents (driver) {
     const brokers = await getMQTTAgentList(driver)
 
     brokers.forEach(async (broker) => {
@@ -302,7 +302,7 @@ async function checkExistingMQTTAgents(driver) {
     })
 }
 
-async function launchMQTTAgent(broker, driver) {
+async function launchMQTTAgent (broker, driver) {
     logger.info(`[localfs] Starting MQTT Schema agent ${broker.hashid} for ${broker.Team.hashid}`)
     const agentSettings = broker.settings
     agentSettings.port = agentSettings.port || getNextFreePort(driver._usedAgentPorts, initialAgentPortNumber)
@@ -317,7 +317,7 @@ async function launchMQTTAgent(broker, driver) {
     env.FORGE_PORT = agentSettings.port
 
     if (driver._app.config.node_path) {
-        env.PATH = process.env.PATH + path.delimiter + app.config.node_path
+        env.PATH = process.env.PATH + path.delimiter + driver._app.config.node_path
     } else {
         env.PATH = process.env.PATH
     }
@@ -339,7 +339,7 @@ async function launchMQTTAgent(broker, driver) {
     }
 
     let execPath
-    for (let i=0; i < module.paths.length; i++) {
+    for (let i = 0; i < module.paths.length; i++) {
         execPath = path.join(module.paths[i], '@flowfuse/mqtt-schema-agent/index.js')
         if (existsSync(execPath)) {
             break
@@ -354,7 +354,7 @@ async function launchMQTTAgent(broker, driver) {
     const args = [
         execPath
     ]
-    
+
     const proc = childProcess.spawn(process.execPath, args, processOptions)
     proc.unref()
 
@@ -752,7 +752,7 @@ module.exports = {
         }
     },
 
-    //Broker Agent API
+    // Broker Agent API
     startBrokerAgent: async (broker) => {
         launchMQTTAgent(broker, this)
     },
@@ -777,7 +777,7 @@ module.exports = {
             close(fileHandles[broker.id].err)
             delete fileHandles[broker.id]
         }
-        if (port){
+        if (port) {
             this._usedAgentPorts.delete(port)
         }
     },
