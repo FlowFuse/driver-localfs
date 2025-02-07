@@ -229,7 +229,7 @@ async function getMQTTAgentList (driver) {
     })
 
     agents.forEach(async (agent) => {
-        if (agent.settings.port) {
+        if (agent.Team && agent.settings.port) {
             driver._usedAgentPorts.add(agent.settings.port)
         }
     })
@@ -285,19 +285,21 @@ async function checkExistingMQTTAgents (driver) {
     const brokers = await getMQTTAgentList(driver)
 
     brokers.forEach(async (broker) => {
-        if (broker.state !== 'running') {
-            return
-        }
+        if (broker.Team) {
+            if (broker.state !== 'running') {
+                return
+            }
 
-        try {
-            await got.get(`http://localhost:${broker.settings.port}/healthz`, {
-                timeout: {
-                    request: 1000
-                }
-            }).json()
-        } catch (err) {
-            logger.info(`Starting MQTT Agent ${broker.hashid} on port ${broker.settings.port}`)
-            launchMQTTAgent(broker, driver)
+            try {
+                await got.get(`http://localhost:${broker.settings.port}/healthz`, {
+                    timeout: {
+                        request: 1000
+                    }
+                }).json()
+            } catch (err) {
+                logger.info(`Starting MQTT Agent ${broker.hashid} on port ${broker.settings.port}`)
+                launchMQTTAgent(broker, driver)
+            }
         }
     })
 }
