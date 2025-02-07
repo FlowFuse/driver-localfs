@@ -19,13 +19,17 @@ const semver = require('semver')
 const childProcess = require('child_process')
 
 let initialPortNumber
+let initialAgentPortNumber
 
 const fileHandles = {}
 
 let logger
 
-function getNextFreePort (ports) {
-    let port = initialPortNumber
+function getNextFreePort (ports, initialPort) {
+    if (initialPort === undefined) {
+        initialPort = initialPortNumber
+    }
+    let port = initialPort
     while (ports.has(port)) {
         port++
     }
@@ -219,6 +223,19 @@ async function getProjectList (driver) {
     return projects
 }
 
+async function getMQTTAgentList (driver) {
+    const agents = await driver._app.db.models.BrokerCredentials.findAll({
+        include: [{ model: driver._app.db.models.Team }]
+    })
+
+    agents.forEach(async (agent) => {
+        if (agent.settings.port) {
+            driver._usedAgentPorts.add(agent.settings.port)
+        }
+    })
+    return agents
+}
+
 async function checkExistingProjects (driver) {
     logger.debug('[localfs] Checking instance status')
 
@@ -264,6 +281,88 @@ async function checkExistingProjects (driver) {
     })
 }
 
+async function checkExistingMQTTAgents (driver) {
+    const brokers = await getMQTTAgentList(driver)
+
+    brokers.forEach(async (broker) => {
+        if (broker.state !== 'running') {
+            return
+        }
+
+        try {
+            await got.get(`http://localhost:${broker.settings.port}/healthz`, {
+                timeout: {
+                    request: 1000
+                }
+            }).json()
+        } catch (err) {
+            logger.info(`Starting MQTT Agent ${broker.hashid} on port ${broker.settings.port}`)
+            launchMQTTAgent(broker, driver)
+        }
+    })
+}
+
+async function launchMQTTAgent (broker, driver) {
+    logger.info(`[localfs] Starting MQTT Schema agent ${broker.hashid} for ${broker.Team.hashid}`)
+    const agentSettings = broker.settings
+    agentSettings.port = agentSettings.port || getNextFreePort(driver._usedAgentPorts, initialAgentPortNumber)
+
+    const { token } = await broker.refreshAuthTokens()
+    const env = {}
+
+    env.FORGE_TEAM_TOKEN = token
+    env.FORGE_URL = driver._app.config.base_url
+    env.FORGE_BROKER_ID = broker.hashid
+    env.FORGE_TEAM_ID = broker.Team.hashid
+    env.FORGE_PORT = agentSettings.port
+
+    if (driver._app.config.node_path) {
+        env.PATH = process.env.PATH + path.delimiter + driver._app.config.node_path
+    } else {
+        env.PATH = process.env.PATH
+    }
+
+    const out = openSync(path.join(driver._rootDir, `/${broker.hashid}-out.log`), 'a')
+    const err = openSync(path.join(driver._rootDir, `/${broker.hashid}-out.log`), 'a')
+
+    fileHandles[broker.hashid] = {
+        out,
+        err
+    }
+
+    const processOptions = {
+        detached: true,
+        windowsHide: true,
+        stdio: ['ignore', out, err],
+        env,
+        cwd: driver._rootDir
+    }
+
+    let execPath
+    for (let i = 0; i < module.paths.length; i++) {
+        execPath = path.join(module.paths[i], '@flowfuse/mqtt-schema-agent/index.js')
+        if (existsSync(execPath)) {
+            break
+        }
+        execPath = null
+    }
+    if (!execPath) {
+        logger.info('Can not find @flowfuse/mqtt-agent-schema executable')
+        process.exit(1)
+    }
+
+    const args = [
+        execPath
+    ]
+
+    const proc = childProcess.spawn(process.execPath, args, processOptions)
+    proc.unref()
+
+    agentSettings.pid = proc.pid
+    broker.settings = agentSettings
+    await broker.save()
+}
+
 async function getStaticFileUrl (project, filePath) {
     const port = await project.getSetting('port')
     return `http://localhost:${port + 1000}/flowforge/files/_/${encodeURIComponent(filePath)}`
@@ -281,11 +380,13 @@ module.exports = {
         this._options = options
         this._projects = {}
         this._usedPorts = new Set()
+        this._usedAgentPorts = new Set()
         // TODO need a better way to find this location?
         this._rootDir = path.resolve(app.config.home, 'var/projects')
         this._stackDir = path.resolve(app.config.home, 'var/stacks')
 
         initialPortNumber = app.config.driver.options?.start_port || 12080
+        initialAgentPortNumber = app.config.driver.options?.agent_start_port || 15080
 
         logger = app.log
 
@@ -295,12 +396,18 @@ module.exports = {
 
         // Ensure we have our local list of projects up to date
         await getProjectList(this)
+        await getMQTTAgentList(this)
         this._initialCheckTimeout = setTimeout(() => {
             app.log.debug('[localfs] Restarting projects')
             checkExistingProjects(this)
+            // TODO should check MQTT Agents
+            app.log.debug('[localfs] Restarting MQTT Agents')
+            checkExistingMQTTAgents(this)
         }, 1000)
         this._checkInterval = setInterval(() => {
             checkExistingProjects(this)
+            // TODO should check MQTT Agents
+            checkExistingMQTTAgents(this)
         }, 60000)
         return {
             stack: {
@@ -642,6 +749,59 @@ module.exports = {
         } catch (err) {
             err.statusCode = err.response.statusCode
             throw err
+        }
+    },
+
+    // Broker Agent API
+    startBrokerAgent: async (broker) => {
+        launchMQTTAgent(broker, this)
+    },
+    stopBrokerAgent: async (broker) => {
+        const pid = broker.settings?.pid
+        const port = broker.settings?.port
+        logger.info(`Stopping MQTT Schema Agent ${broker.hashid}`)
+        if (pid) {
+            try {
+                if (process.platform === 'win32') {
+                    childProcess.exec(`taskkill /pid ${pid} /T /F`)
+                } else {
+                    process.kill(pid, 'SIGTERM')
+                }
+            } catch (err) {
+                // ignore for now
+            }
+        }
+
+        if (fileHandles[broker.id]) {
+            close(fileHandles[broker.id].out)
+            close(fileHandles[broker.id].err)
+            delete fileHandles[broker.id]
+        }
+        if (port) {
+            this._usedAgentPorts.delete(port)
+        }
+    },
+    getBrokerAgentState: async (broker) => {
+        try {
+            const status = got.get(`http://localhost:${broker.settings.port}/api/v1/status`).json()
+            return status
+        } catch (err) {
+            return { error: 'error_getting_status', message: err.toString() }
+        }
+    },
+    sendBrokerAgentCommand: async (broker, command) => {
+        if (command === 'start' || command === 'restart') {
+            try {
+                await got.post(`http://localhost:${broker.settings.port}/api/v1/commands/start`)
+            } catch (err) {
+                console.log(err)
+            }
+        } else if (command === 'stop') {
+            try {
+                await got.post(`http://localhost:${broker.settings.port}/api/v1/commands/stop`)
+            } catch (err) {
+                console.log(err)
+            }
         }
     }
 }
