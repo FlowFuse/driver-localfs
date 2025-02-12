@@ -785,7 +785,7 @@ module.exports = {
     },
     getBrokerAgentState: async (broker) => {
         try {
-            const status = got.get(`http://localhost:${broker.settings.port}/api/v1/status`).json()
+            const status = await got.get(`http://localhost:${broker.settings.port}/api/v1/status`).json()
             return status
         } catch (err) {
             return { error: 'error_getting_status', message: err.toString() }
