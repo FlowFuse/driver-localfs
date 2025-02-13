@@ -1,3 +1,9 @@
+#### 2.14.0: Release
+
+ - Fix await when polling mqtt-schema-agent status (#166) @hardillb
+ - Skip the team broker when checking to restart agents (#165) @hardillb
+ - Start of mqtt-schema-agent support (#164) @hardillb
+
 #### 2.13.0: Release
 
 
