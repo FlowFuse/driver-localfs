@@ -1,3 +1,9 @@
+#### 2.16.0: Release
+
+ - chore: fix lint script (#172)
+ - Bump @babel/runtime from 7.26.7 to 7.27.0 (#171) @app/dependabot
+ - chore: Pin external actions to commit hash (#170) @ppawlowski
+
 #### 2.15.0: Release
 
 
