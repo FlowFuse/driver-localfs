@@ -1,3 +1,7 @@
+#### 2.17.0: Release
+
+ - Bump actions/setup-node from 4.3.0 to 4.4.0 (#174)
+
 #### 2.16.0: Release
 
  - chore: fix lint script (#172)
