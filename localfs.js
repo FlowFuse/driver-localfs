@@ -805,5 +805,13 @@ module.exports = {
                 console.log(err)
             }
         }
+    },
+    resources: async (project) => {
+        if (this._projects[project.id] === undefined) {
+            throw new Error('Cannot get instance resources')
+        }
+        const port = await project.getSetting('port')
+        const result = await got.get('http://localhost:' + (port + 1000) + '/flowforge/resources').json()
+        return result
     }
 }
