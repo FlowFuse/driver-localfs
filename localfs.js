@@ -812,6 +812,14 @@ module.exports = {
         }
         const port = await project.getSetting('port')
         const result = await got.get('http://localhost:' + (port + 1000) + '/flowforge/resources').json()
-        return result
+        if (Array.isArray(result)) {
+            return {
+                meta: {},
+                resources: result,
+                count: result.length
+            }
+        } else {
+            return result
+        }
     }
 }
