@@ -17,6 +17,7 @@ const got = require('got')
 const path = require('path')
 const semver = require('semver')
 const childProcess = require('child_process')
+const { WebSocket } = require('ws')
 
 let initialPortNumber
 let initialAgentPortNumber
@@ -805,5 +806,49 @@ module.exports = {
                 console.log(err)
             }
         }
+    },
+    resources: async (project) => {
+        if (this._projects[project.id] === undefined) {
+            throw new Error('Cannot get instance resources')
+        }
+        const port = await project.getSetting('port')
+        const result = await got.get('http://localhost:' + (port + 1000) + '/flowforge/resources').json()
+        if (Array.isArray(result)) {
+            return {
+                meta: {},
+                resources: result,
+                count: result.length
+            }
+        } else {
+            return result
+        }
+    },
+    resourcesStream: async (project, socket) => {
+        if (this._projects[project.id] === undefined) {
+            throw new Error('Cannot get instance resources')
+        }
+        const port = await project.getSetting('port')
+        const url = 'ws://localhost:' + (port + 1000) + '/flowforge/resources'
+        const resourceStream = new WebSocket(url, {})
+        // resourceStream.on('open', () => {
+        //     console.log('Resource stream opened')
+        // })
+        resourceStream.on('message', (data) => {
+            // console.log('Received resource stream message', data)
+            socket.send(data)
+        })
+        resourceStream.on('error', (err) => {
+            logger.error(`Error in resource stream: ${err}`)
+            socket.close()
+        })
+        socket.on('close', () => {
+            // console.log('Closing resource stream')
+            try {
+                resourceStream.close()
+            } catch (err) {
+                // logger.error(`Error closing resource stream: ${err}`)
+            }
+        })
+        return resourceStream
     }
 }
