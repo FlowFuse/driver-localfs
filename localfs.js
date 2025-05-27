@@ -830,11 +830,7 @@ module.exports = {
         const port = await project.getSetting('port')
         const url = 'ws://localhost:' + (port + 1000) + '/flowforge/resources'
         const resourceStream = new WebSocket(url, {})
-        // resourceStream.on('open', () => {
-        //     console.log('Resource stream opened')
-        // })
         resourceStream.on('message', (data) => {
-            // console.log('Received resource stream message', data)
             socket.send(data)
         })
         resourceStream.on('error', (err) => {
@@ -842,11 +838,10 @@ module.exports = {
             socket.close()
         })
         socket.on('close', () => {
-            // console.log('Closing resource stream')
             try {
                 resourceStream.close()
-            } catch (err) {
-                // logger.error(`Error closing resource stream: ${err}`)
+            } catch (_err) {
+                // ignore error
             }
         })
         return resourceStream
