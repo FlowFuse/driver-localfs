@@ -25,7 +25,7 @@
         "@flowfuse/nr-launcher": "^2.17.0",
         "form-data": "^4.0.0",
         "got": "^11.8.5",
-        "semver": "^7.3.8",
+        "semver": "~7.6.0",
         "ws": "^8.18.2"
     },
     "devDependencies": {
