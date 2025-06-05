@@ -1,3 +1,7 @@
+#### 2.18.0: Release
+
+ - Add historical CPU/process size API (#176) @hardillb
+
 #### 2.17.0: Release
 
  - Bump actions/setup-node from 4.3.0 to 4.4.0 (#174)
