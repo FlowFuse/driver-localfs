@@ -1,3 +1,7 @@
+#### 2.19.0: Release
+
+ - Bump flowfuse/github-actions-workflows from 0.39.0 to 0.40.0 (#178)
+
 #### 2.18.0: Release
 
  - Add historical CPU/process size API (#176) @hardillb
