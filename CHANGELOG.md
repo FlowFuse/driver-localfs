@@ -1,3 +1,10 @@
+#### 2.19.1: Release
+
+ - Bump form-data from 4.0.0 to 4.0.4 (#183) @app/dependabot
+ - Bump on-headers and express-session (#182) @app/dependabot
+ - Bump multer from 2.0.1 to 2.0.2 (#181) @app/dependabot
+ - Bump brace-expansion from 1.1.11 to 1.1.12 (#179) @app/dependabot
+
 #### 2.19.0: Release
 
  - Bump flowfuse/github-actions-workflows from 0.39.0 to 0.40.0 (#178)
