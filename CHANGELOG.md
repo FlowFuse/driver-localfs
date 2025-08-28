@@ -1,3 +1,8 @@
+#### 2.21.0: Release
+
+ - Bump actions/checkout from 4.2.2 to 5.0.0 (#187)
+ - Bump flowfuse/github-actions-workflows from 0.40.0 to 0.42.0 (#186)
+
 #### 2.20.0: Release
 
 
