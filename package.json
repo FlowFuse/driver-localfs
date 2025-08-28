@@ -1,6 +1,6 @@
 {
     "name": "@flowfuse/driver-localfs",
-    "version": "2.21.0",
+    "version": "2.21.1",
     "description": "Local Filesystem FlowFuse Project driver",
     "main": "localfs.js",
     "scripts": {
@@ -22,7 +22,7 @@
     "license": "Apache-2.0",
     "dependencies": {
         "@flowfuse/mqtt-schema-agent": "^1.0.0",
-        "@flowfuse/nr-launcher": "^2.21.0",
+        "@flowfuse/nr-launcher": "^2.21.1",
         "form-data": "^4.0.0",
         "got": "^11.8.5",
         "semver": "~7.6.0",
