@@ -1,3 +1,7 @@
+#### 2.21.2: Release
+
+ - Bump actions/setup-node from 4.4.0 to 5.0.0 (#191)
+
 #### 2.21.1: Release
 
 
