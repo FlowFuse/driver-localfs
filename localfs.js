@@ -307,7 +307,7 @@ async function checkExistingMQTTAgents (driver) {
 
 async function launchMQTTAgent (broker, driver) {
     const agent = broker.constructor.name === 'TeamBrokerAgent'
-    
+
     logger.info(`[localfs] Starting MQTT Schema agent ${agent ? 'team-broker' : broker.hashid} for ${broker.Team.hashid}`)
     const agentSettings = broker.settings
     agentSettings.port = agentSettings.port || getNextFreePort(driver._usedAgentPorts, initialAgentPortNumber)
