@@ -306,7 +306,9 @@ async function checkExistingMQTTAgents (driver) {
 }
 
 async function launchMQTTAgent (broker, driver) {
-    logger.info(`[localfs] Starting MQTT Schema agent ${broker.hashid} for ${broker.Team.hashid}`)
+    const agent = broker.constructor.name === 'TeamBrokerAgent'
+    
+    logger.info(`[localfs] Starting MQTT Schema agent ${agent ? 'team-broker' : broker.hashid} for ${broker.Team.hashid}`)
     const agentSettings = broker.settings
     agentSettings.port = agentSettings.port || getNextFreePort(driver._usedAgentPorts, initialAgentPortNumber)
 
@@ -315,9 +317,12 @@ async function launchMQTTAgent (broker, driver) {
 
     env.FORGE_TEAM_TOKEN = token
     env.FORGE_URL = driver._app.config.base_url
-    env.FORGE_BROKER_ID = broker.hashid
+    env.FORGE_BROKER_ID = agent ? 'team-broker' : broker.hashid
     env.FORGE_TEAM_ID = broker.Team.hashid
     env.FORGE_PORT = agentSettings.port
+    if (agent) {
+        env.FORGE_TIMEOUT = 24
+    }
 
     if (driver._app.config.node_path) {
         env.PATH = process.env.PATH + path.delimiter + driver._app.config.node_path
@@ -325,8 +330,8 @@ async function launchMQTTAgent (broker, driver) {
         env.PATH = process.env.PATH
     }
 
-    const out = openSync(path.join(driver._rootDir, `/${broker.hashid}-out.log`), 'a')
-    const err = openSync(path.join(driver._rootDir, `/${broker.hashid}-out.log`), 'a')
+    const out = openSync(path.join(driver._rootDir, `/${agent ? 'team-broker-' + broker.Team.hashid : broker.hashid}-out.log`), 'a')
+    const err = openSync(path.join(driver._rootDir, `/${agent ? 'team-broker-' + broker.Team.hashid : broker.hashid}-out.log`), 'a')
 
     fileHandles[broker.hashid] = {
         out,
@@ -760,9 +765,10 @@ module.exports = {
         launchMQTTAgent(broker, this)
     },
     stopBrokerAgent: async (broker) => {
+        const agent = broker.constructor.name === 'TeamBrokerAgent'
         const pid = broker.settings?.pid
         const port = broker.settings?.port
-        logger.info(`Stopping MQTT Schema Agent ${broker.hashid}`)
+        logger.info(`Stopping MQTT Schema Agent ${agent ? 'team-broker' : broker.hashid} for ${broker.Team.hashid}`)
         if (pid) {
             try {
                 if (process.platform === 'win32') {
@@ -831,6 +837,7 @@ module.exports = {
         const url = 'ws://localhost:' + (port + 1000) + '/flowforge/resources'
         const resourceStream = new WebSocket(url, {})
         resourceStream.on('message', (data) => {
+            console.log('Resource stream message received', data)
             socket.send(data)
         })
         resourceStream.on('error', (err) => {
@@ -842,6 +849,7 @@ module.exports = {
                 resourceStream.close()
             } catch (_err) {
                 // ignore error
+                console.log('ben, error closing resource stream', _err)
             }
         })
         return resourceStream
