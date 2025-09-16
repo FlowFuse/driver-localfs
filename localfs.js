@@ -837,7 +837,6 @@ module.exports = {
         const url = 'ws://localhost:' + (port + 1000) + '/flowforge/resources'
         const resourceStream = new WebSocket(url, {})
         resourceStream.on('message', (data) => {
-            console.log('Resource stream message received', data)
             socket.send(data)
         })
         resourceStream.on('error', (err) => {
@@ -849,7 +848,6 @@ module.exports = {
                 resourceStream.close()
             } catch (_err) {
                 // ignore error
-                console.log('ben, error closing resource stream', _err)
             }
         })
         return resourceStream
