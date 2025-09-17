@@ -228,12 +228,17 @@ async function getMQTTAgentList (driver) {
     const agents = await driver._app.db.models.BrokerCredentials.findAll({
         include: [{ model: driver._app.db.models.Team }]
     })
+    const teamBrokerAgents = await driver._app.db.models.TeamBrokerAgent.findAll({
+        include: [{ model: driver._app.db.models.Team }]
+    })
 
+    agents.concat(teamBrokerAgents)
     agents.forEach(async (agent) => {
         if (agent.Team && agent.settings.port) {
             driver._usedAgentPorts.add(agent.settings.port)
         }
     })
+
     return agents
 }
 
@@ -339,7 +344,7 @@ async function launchMQTTAgent (broker, driver) {
     }
 
     const processOptions = {
-        detached: true,
+        detached: false,
         windowsHide: true,
         stdio: ['ignore', out, err],
         env,
