@@ -247,7 +247,7 @@ async function checkExistingProjects (driver) {
     logger.debug('[localfs] Checking instance status')
 
     const projects = await getProjectList(driver)
-    for (project of projects) {
+    for (const project of projects) {
         const projectSettings = project._settings
         // Suspended projects don't get restarted
         if (project.state === 'suspended') {
@@ -291,7 +291,7 @@ async function checkExistingProjects (driver) {
 async function checkExistingMQTTAgents (driver) {
     const brokers = await getMQTTAgentList(driver)
 
-    for(const broker of brokers) {
+    for (const broker of brokers) {
         if (broker.Team) {
             if (broker.state !== 'running') {
                 continue
@@ -394,8 +394,8 @@ module.exports = {
         this._options = options
         this._projects = app.caches.getCache('driver-localfs-projects') // {}
         // need to clear redis as this should not be keeping state across restarts
-        const _project_keys = await  this._projects.keys()
-        for (const k of _project_keys) {
+        const _projectKeys = await this._projects.keys()
+        for (const k of _projectKeys) {
             this._projects.del(k)
         }
         this._usedPorts = new Set()
@@ -710,7 +710,7 @@ module.exports = {
 
     // Static Assets API
     listFiles: async (instance, filePath) => {
-        const cachedProject = await this._projects.get(project.id)
+        const cachedProject = await this._projects.get(instance.id)
         if (cachedProject === undefined) {
             throw new Error('Cannot access instance files')
         }
@@ -724,7 +724,7 @@ module.exports = {
     },
 
     updateFile: async (instance, filePath, update) => {
-        const cachedProject = await this._projects.get(project.id)
+        const cachedProject = await this._projects.get(instance.id)
         if (cachedProject === undefined) {
             throw new Error('Cannot access instance files')
         }
@@ -740,7 +740,7 @@ module.exports = {
     },
 
     deleteFile: async (instance, filePath) => {
-        const cachedProject = await this._projects.get(project.id)
+        const cachedProject = await this._projects.get(instance.id)
         if (cachedProject === undefined) {
             throw new Error('Cannot access instance files')
         }
@@ -753,7 +753,7 @@ module.exports = {
         }
     },
     createDirectory: async (instance, filePath, directoryName) => {
-        const cachedProject = await this._projects.get(project.id)
+        const cachedProject = await this._projects.get(instance.id)
         if (cachedProject === undefined) {
             throw new Error('Cannot access instance files')
         }
@@ -768,7 +768,7 @@ module.exports = {
         }
     },
     uploadFile: async (instance, filePath, fileBuffer) => {
-        const cachedProject = await this._projects.get(project.id)
+        const cachedProject = await this._projects.get(instance.id)
         if (cachedProject === undefined) {
             throw new Error('Cannot access instance files')
         }
