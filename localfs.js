@@ -207,20 +207,21 @@ async function getProjectList (driver) {
             }
         ]
     })
-    projects.forEach(async (project) => {
+    for (const project of projects) {
         const projectSettings = {}
         // Remap the project settings to make them accessible
-        project.ProjectSettings.forEach(ps => {
+        for (const ps of project.ProjectSettings) {
             projectSettings[ps.key] = ps.value
-        })
+        }
         driver._usedPorts.add(projectSettings.port)
-        if (driver._projects[project.id] === undefined) {
-            driver._projects[project.id] = {
+        const cachedProject = await driver._projects.get(project.id)
+        if (cachedProject === undefined) {
+            await driver._projects.set(project.id, {
                 state: 'unknown'
-            }
+            })
         }
         project._settings = projectSettings
-    })
+    }
     return projects
 }
 
@@ -233,11 +234,11 @@ async function getMQTTAgentList (driver) {
     })
 
     agents.concat(teamBrokerAgents)
-    agents.forEach(async (agent) => {
+    for (const agent of agents) {
         if (agent.Team && agent.settings.port) {
             driver._usedAgentPorts.add(agent.settings.port)
         }
-    })
+    }
 
     return agents
 }
@@ -246,11 +247,11 @@ async function checkExistingProjects (driver) {
     logger.debug('[localfs] Checking instance status')
 
     const projects = await getProjectList(driver)
-    projects.forEach(async (project) => {
+    for (const project of projects) {
         const projectSettings = project._settings
         // Suspended projects don't get restarted
         if (project.state === 'suspended') {
-            return
+            continue
         }
 
         logger.debug(`[localfs] Instance ${project.id} port ${projectSettings.port}`)
@@ -269,9 +270,9 @@ async function checkExistingProjects (driver) {
                 logger.warn(`[localfs] Instance ${project.id} expected on port ${projectSettings.port}. Found ${info.id}`)
                 // TODO should do something here...
             } else {
-                driver._projects[project.id] = {
+                await driver._projects.set(project.id, {
                     state: 'started'
-                }
+                })
             }
         } catch (err) {
             logger.info(`Starting instance ${project.id} on port ${projectSettings.port}`)
@@ -280,20 +281,20 @@ async function checkExistingProjects (driver) {
 
             const pid = await startProject(driver._app, project, projectStack, projectSettings.path, projectSettings.port)
             await project.updateSetting('pid', pid)
-            driver._projects[project.id] = {
+            await driver._projects.set(project.id, {
                 state: 'started'
-            }
+            })
         }
-    })
+    }
 }
 
 async function checkExistingMQTTAgents (driver) {
     const brokers = await getMQTTAgentList(driver)
 
-    brokers.forEach(async (broker) => {
+    for (const broker of brokers) {
         if (broker.Team) {
             if (broker.state !== 'running') {
-                return
+                continue
             }
 
             try {
@@ -307,7 +308,7 @@ async function checkExistingMQTTAgents (driver) {
                 launchMQTTAgent(broker, driver)
             }
         }
-    })
+    }
 }
 
 async function launchMQTTAgent (broker, driver) {
@@ -391,7 +392,12 @@ module.exports = {
     init: async (app, options) => {
         this._app = app
         this._options = options
-        this._projects = {}
+        this._projects = app.caches.getCache('driver-localfs-projects') // {}
+        // need to clear redis as this should not be keeping state across restarts
+        const _projectKeys = await this._projects.keys()
+        for (const k of _projectKeys) {
+            this._projects.del(k)
+        }
         this._usedPorts = new Set()
         this._usedAgentPorts = new Set()
         // TODO need a better way to find this location?
@@ -459,9 +465,9 @@ module.exports = {
             this._usedPorts.add(port)
         }
 
-        this._projects[project.id] = {
+        await this._projects.set(project.id, {
             state: 'starting'
-        }
+        })
 
         await project.updateSettings({
             path: directory,
@@ -483,7 +489,9 @@ module.exports = {
                 setTimeout(async () => {
                     logger.debug(`PID ${pid}, port, ${port}, directory, ${directory}`)
                     await project.updateSetting('pid', pid)
-                    this._projects[project.id].state = 'started'
+                    const cachedProject = await this._projects.get(project.id)
+                    cachedProject.state = 'started'
+                    await this._projects.set(project.id, cachedProject)
                     resolve()
                 }, 1000)
             })
@@ -496,7 +504,9 @@ module.exports = {
      */
     stop: async (project) => {
         const projectSettings = await project.getAllSettings()
-        this._projects[project.id].state = 'suspended'
+        const cachedProject = await this._projects.get(project.id)
+        cachedProject.state = 'suspended'
+        await this._projects.set(project.id, cachedProject)
         stopProject(this._app, project, projectSettings)
     },
 
@@ -518,7 +528,7 @@ module.exports = {
         }, 5000)
 
         this._usedPorts.delete(projectSettings.port)
-        delete this._projects[project.id]
+        await this._projects.del(project.id)
     },
     /**
     * Retrieves details of a project's container
@@ -526,14 +536,15 @@ module.exports = {
     * @return {Object}
     */
     details: async (project) => {
-        if (this._projects[project.id] === undefined) {
+        const cachedProject = await this._projects.get(project.id)
+        if (cachedProject === undefined) {
             return { state: 'unknown' }
         }
-        if (this._projects[project.id].state !== 'started') {
+        if (cachedProject.state === 'suspended') {
             // We should only poll the launcher if we think it is running.
             // Otherwise, return our cached state
             return {
-                state: this._projects[project.id].state
+                state: cachedProject.state
             }
         }
         const port = await project.getSetting('port')
@@ -574,7 +585,8 @@ module.exports = {
      * @param {Project} project - the project model instance
      */
     startFlows: async (project) => {
-        if (this._projects[project.id] === undefined) {
+        const cachedProject = await this._projects.get(project.id)
+        if (cachedProject === undefined) {
             throw new Error('Instance cannot start flows')
         }
         const port = await project.getSetting('port')
@@ -590,7 +602,8 @@ module.exports = {
    * @return {forge.Status}
    */
     stopFlows: async (project) => {
-        if (this._projects[project.id] === undefined) {
+        const cachedProject = await this._projects.get(project.id)
+        if (cachedProject === undefined) {
             throw new Error('Instance cannot stop flows')
         }
         const port = await project.getSetting('port')
@@ -606,7 +619,8 @@ module.exports = {
    * @return {forge.Status}
    */
     restartFlows: async (project) => {
-        if (this._projects[project.id] === undefined) {
+        const cachedProject = await this._projects.get(project.id)
+        if (cachedProject === undefined) {
             throw new Error('Instance cannot restart flows')
         }
         const port = await project.getSetting('port')
@@ -643,7 +657,8 @@ module.exports = {
    * @return {array} logs
    */
     logs: async (project) => {
-        if (this._projects[project.id] === undefined) {
+        const cachedProject = await this._projects.get(project.id)
+        if (cachedProject === undefined) {
             throw new Error('Cannot get instance logs')
         }
         const port = await project.getSetting('port')
@@ -695,7 +710,8 @@ module.exports = {
 
     // Static Assets API
     listFiles: async (instance, filePath) => {
-        if (this._projects[instance.id] === undefined) {
+        const cachedProject = await this._projects.get(instance.id)
+        if (cachedProject === undefined) {
             throw new Error('Cannot access instance files')
         }
         const fileUrl = await getStaticFileUrl(instance, filePath)
@@ -708,7 +724,8 @@ module.exports = {
     },
 
     updateFile: async (instance, filePath, update) => {
-        if (this._projects[instance.id] === undefined) {
+        const cachedProject = await this._projects.get(instance.id)
+        if (cachedProject === undefined) {
             throw new Error('Cannot access instance files')
         }
         const fileUrl = await getStaticFileUrl(instance, filePath)
@@ -723,7 +740,8 @@ module.exports = {
     },
 
     deleteFile: async (instance, filePath) => {
-        if (this._projects[instance.id] === undefined) {
+        const cachedProject = await this._projects.get(instance.id)
+        if (cachedProject === undefined) {
             throw new Error('Cannot access instance files')
         }
         const fileUrl = await getStaticFileUrl(instance, filePath)
@@ -735,7 +753,8 @@ module.exports = {
         }
     },
     createDirectory: async (instance, filePath, directoryName) => {
-        if (this._projects[instance.id] === undefined) {
+        const cachedProject = await this._projects.get(instance.id)
+        if (cachedProject === undefined) {
             throw new Error('Cannot access instance files')
         }
         const fileUrl = await getStaticFileUrl(instance, filePath)
@@ -749,7 +768,8 @@ module.exports = {
         }
     },
     uploadFile: async (instance, filePath, fileBuffer) => {
-        if (this._projects[instance.id] === undefined) {
+        const cachedProject = await this._projects.get(instance.id)
+        if (cachedProject === undefined) {
             throw new Error('Cannot access instance files')
         }
         const form = new FormData()
@@ -819,7 +839,8 @@ module.exports = {
         }
     },
     resources: async (project) => {
-        if (this._projects[project.id] === undefined) {
+        const cachedProject = await this._projects.get(project.id)
+        if (cachedProject === undefined) {
             throw new Error('Cannot get instance resources')
         }
         const port = await project.getSetting('port')
@@ -835,7 +856,8 @@ module.exports = {
         }
     },
     resourcesStream: async (project, socket) => {
-        if (this._projects[project.id] === undefined) {
+        const cachedProject = await this._projects.get(project.id)
+        if (cachedProject === undefined) {
             throw new Error('Cannot get instance resources')
         }
         const port = await project.getSetting('port')
