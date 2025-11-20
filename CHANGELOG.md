@@ -1,3 +1,8 @@
+#### 2.24.0: Release
+
+ - Bump flowfuse/github-actions-workflows from 0.42.0 to 0.43.0 (#205)
+ - Bump js-yaml from 4.1.0 to 4.1.1 (#206) @app/dependabot
+
 #### 2.23.1: Release
 
 
