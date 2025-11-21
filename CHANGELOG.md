@@ -1,3 +1,6 @@
+#### 2.24.1: Release
+
+
 #### 2.24.0: Release
 
  - Bump flowfuse/github-actions-workflows from 0.42.0 to 0.43.0 (#205)
