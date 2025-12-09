@@ -1,3 +1,10 @@
+#### 2.24.5: Release
+
+ - Bump actions/setup-node from 6.0.0 to 6.1.0 (#216)
+ - Bump actions/checkout from 6.0.0 to 6.0.1 (#215)
+ - Bump @modelcontextprotocol/sdk from 1.17.5 to 1.24.0 (#214) @app/dependabot
+ - Bump express (#213) @app/dependabot
+
 #### 2.24.4: Release
 
 
