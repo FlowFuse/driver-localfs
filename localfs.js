@@ -553,7 +553,7 @@ module.exports = {
             const info = JSON.parse((await got.get(infoURL)).body)
             return info
         } catch (err) {
-            console.log(err)
+            console.error(err)
             // TODO
         }
     },
@@ -828,13 +828,13 @@ module.exports = {
             try {
                 await got.post(`http://localhost:${broker.settings.port}/api/v1/commands/start`)
             } catch (err) {
-                console.log(err)
+                console.error(err)
             }
         } else if (command === 'stop') {
             try {
                 await got.post(`http://localhost:${broker.settings.port}/api/v1/commands/stop`)
             } catch (err) {
-                console.log(err)
+                console.error(err)
             }
         }
     },
