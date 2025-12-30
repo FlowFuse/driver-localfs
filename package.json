@@ -5,8 +5,8 @@
     "main": "localfs.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "lint": "eslint -c .eslintrc \"**/*.js\"",
-        "lint:fix": "eslint -c .eslintrc \"**/*.js\" --fix"
+        "lint": "eslint -c eslint.config.mjs",
+        "lint:fix": "eslint -c eslint.config.mjs--fix"
     },
     "repository": {
         "type": "git",
@@ -29,7 +29,10 @@
         "ws": "^8.18.2"
     },
     "devDependencies": {
-        "eslint": "^8.25.0",
-        "eslint-config-standard": "^17.0.0"
+        "@eslint/js": "^9.39.2",
+        "eslint": "^9.39.2",
+        "eslint-plugin-no-only-tests": "^3.3.0",
+        "globals": "^16.5.0",
+        "neostandard": "^0.12.2"
     }
 }
