@@ -1,3 +1,13 @@
+#### 2.26.0: Release
+
+ - Bump JS-DevTools/npm-publish from 4.1.2 to 4.1.3 (#228)
+ - ci: Enable SAST (#230) @ppawlowski
+ - Bump JS-DevTools/npm-publish from 4.1.1 to 4.1.2 (#226) @app/dependabot
+ - fix eqeqeq and quotes rules (#225) @hardillb
+ - convert to eslint v9 (#224) @hardillb
+ - Bump flowfuse/github-actions-workflows/.github/workflows/build_node_package.yml from 0.44.0 to 0.45.0 (#222) @app/dependabot
+ - Bump flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml from 0.44.0 to 0.45.0 (#221) @app/dependabot
+
 #### 2.25.0: Release
 
  - Bump flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml (#218)
