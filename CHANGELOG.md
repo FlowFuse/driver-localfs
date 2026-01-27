@@ -1,3 +1,14 @@
+#### 2.26.1: Release
+
+ - Bump flowfuse/github-actions-workflows/.github/workflows/build_node_package.yml (#237)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml (#238)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/sast_scan.yaml (#239)
+ - Bump JS-DevTools/npm-publish from 4.1.3 to 4.1.4 (#232)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml (#234)
+ - Bump actions/setup-node from 6.1.0 to 6.2.0 (#233)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/build_node_package.yml (#235)
+ - Bump actions/checkout from 6.0.1 to 6.0.2 (#236) @app/dependabot
+
 #### 2.26.0: Release
 
  - Bump JS-DevTools/npm-publish from 4.1.2 to 4.1.3 (#228)
