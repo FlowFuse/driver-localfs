@@ -1,3 +1,9 @@
+#### 2.26.2: Release
+
+ - Bump JS-DevTools/npm-publish from 4.1.4 to 4.1.5 (#243) @app/dependabot
+ - Force update to mqtt-schema-agent for qs (#242) @hardillb
+ - Update version of mqtt-schema-agent to pickup qs (#241) @hardillb
+
 #### 2.26.1: Release
 
  - Bump flowfuse/github-actions-workflows/.github/workflows/build_node_package.yml (#237)
