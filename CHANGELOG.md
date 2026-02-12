@@ -1,3 +1,11 @@
+#### 2.27.0: Release
+
+ - Bump flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml (#247)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/sast_scan.yaml (#248)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/build_node_package.yml (#249)
+ - Bump @modelcontextprotocol/sdk from 1.25.3 to 1.26.0 (#246) @app/dependabot
+ - Force clean package-lock.json to pickup qs (#245) @hardillb
+
 #### 2.26.2: Release
 
  - Bump JS-DevTools/npm-publish from 4.1.4 to 4.1.5 (#243) @app/dependabot
