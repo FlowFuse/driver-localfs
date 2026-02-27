@@ -1,3 +1,14 @@
+#### 2.27.1: Release
+
+ - Bump flowfuse/github-actions-workflows/.github/workflows/sast_scan.yaml (#254)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml (#253)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/build_node_package.yml (#252)
+ - Bump hono from 4.12.0 to 4.12.3 (#259) @app/dependabot
+ - Bump minimatch (#258) @app/dependabot
+ - Bump ajv from 6.12.6 to 6.14.0 (#256) @app/dependabot
+ - Bump hono from 4.11.9 to 4.12.0 (#255) @app/dependabot
+ - Bump qs from 6.14.1 to 6.14.2 (#251) @app/dependabot
+
 #### 2.27.0: Release
 
  - Bump flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml (#247)
