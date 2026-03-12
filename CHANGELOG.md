@@ -1,3 +1,18 @@
+#### 2.28.0: Release
+
+ - Bump flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml (#272)
+ - Bump actions/setup-node from 6.2.0 to 6.3.0 (#270)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/build_node_package.yml (#271)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/sast_scan.yaml (#269)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/build_node_package.yml (#263)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/sast_scan.yaml (#262)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml (#261)
+ - Bump hono from 4.12.5 to 4.12.7 (#273) @app/dependabot
+ - Bump express-rate-limit from 8.2.1 to 8.3.0 (#268) @app/dependabot
+ - Bump multer from 2.0.2 to 2.1.1 (#267) @app/dependabot
+ - Bump @hono/node-server from 1.19.9 to 1.19.10 (#266) @app/dependabot
+ - Bump hono from 4.12.3 to 4.12.5 (#265) @app/dependabot
+
 #### 2.27.1: Release
 
  - Bump flowfuse/github-actions-workflows/.github/workflows/sast_scan.yaml (#254)
