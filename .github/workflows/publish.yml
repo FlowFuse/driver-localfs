@@ -25,7 +25,7 @@ jobs:
       uses: 'flowfuse/github-actions-workflows/.github/workflows/build_node_package.yml@v0.52.0'
       with:
         node: '[
-                {"version": "18", "tests": false, "lint": true},
+                {"version": "24", "tests": false, "lint": true},
               ]'
 
   publish:
