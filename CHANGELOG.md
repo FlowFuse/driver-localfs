@@ -1,3 +1,11 @@
+#### 2.28.1: Release
+
+ - Bump actions/create-github-app-token from 2.2.1 to 3.0.0 (#277)
+ - ci: Use NodeJS v24 to build package (#280) @ppawlowski
+ - ci: Use NodeJS v24 as a default GitHub Actions runtime (#279) @ppawlowski
+ - ci: replace `tibdex/github-app-token` with `actions/create-github-app-token` (#276) @ppawlowski
+ - ci: add concurrency to publish workflow (#275) @ppawlowski
+
 #### 2.28.0: Release
 
  - Bump flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml (#272)
