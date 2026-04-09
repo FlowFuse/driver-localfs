@@ -1,3 +1,6 @@
+#### 2.29.1: Release
+
+
 #### 2.29.0: Release
 
  - Bump hono from 4.12.7 to 4.12.12 (#292) @app/dependabot
