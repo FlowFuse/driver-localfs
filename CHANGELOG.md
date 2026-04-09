@@ -1,3 +1,12 @@
+#### 2.29.0: Release
+
+ - Bump hono from 4.12.7 to 4.12.12 (#292) @app/dependabot
+ - Bump @hono/node-server from 1.19.10 to 1.19.13 (#291) @app/dependabot
+ - Bump brace-expansion (#284) @app/dependabot
+ - Bump path-to-regexp (#283) @app/dependabot
+ - Bump picomatch from 4.0.3 to 4.0.4 (#282) @app/dependabot
+ - Bump flatted from 3.3.3 to 3.4.2 (#278) @app/dependabot
+
 #### 2.28.1: Release
 
  - Bump actions/create-github-app-token from 2.2.1 to 3.0.0 (#277)
