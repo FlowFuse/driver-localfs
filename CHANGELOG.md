@@ -1,3 +1,16 @@
+#### 2.30.0: Release
+
+ - Bump actions/setup-node from 6.3.0 to 6.4.0 (#304)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/sast_scan.yaml (#303)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/build_node_package.yml (#302)
+ - Bump flowfuse/github-actions-workflows/.github/workflows/publish_node_package.yml (#301)
+ - Bump actions/create-github-app-token from 3.0.0 to 3.1.1 (#296)
+ - Bump hono from 4.12.14 to 4.12.18 (#308) @app/dependabot
+ - Bump ip-address and express-rate-limit (#307) @app/dependabot
+ - ci: Use new project-automation workflow (#305) @ppawlowski
+ - Bump protobufjs from 7.5.4 to 7.5.5 (#300) @app/dependabot
+ - Bump hono from 4.12.12 to 4.12.14 (#299) @app/dependabot
+
 #### 2.29.1: Release
 
 
