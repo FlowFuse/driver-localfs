@@ -1,3 +1,12 @@
+#### 2.31.0: Release
+
+ - Bump qs, body-parser and express (#316)
+ - Bump protobufjs from 7.5.6 to 7.6.0 (#315)
+ - Bump ws from 8.19.0 to 8.20.1 (#314)
+ - Bump actions/create-github-app-token from 3.1.1 to 3.2.0 (#312)
+ - Switch internal reusable workflows to new tagging approach (#313)
+ - ci: enable dependabot cooldown (#311) @ppawlowski
+
 #### 2.30.1: Release
 
 
