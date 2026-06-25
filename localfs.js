@@ -26,6 +26,18 @@ const fileHandles = {}
 
 let logger
 
+/**
+ * @typedef {object} accessToken
+ * @property {string} [scheme] - auth scheme, e.g. 'Bearer'. Basic auth is currently rejected.
+ * @property {string} [token] - the token value
+ * @property {string|string[]} [scope] - token scope(s); only tokens including `ff-expert:mcp` are honoured
+ *
+ * @typedef {object} McpEndpointSpec - Specification for an MCP endpoint. Additional properties are allowed and will be passed back in the result (for correlation purposes).
+ * @property {string} endpoint - The path of the MCP server e.g. '/mcp'. Should not contain the host/port; those are determined to agent/launcher
+ * @property {object} [headers] - extra request headers to send with every MCP HTTP request
+ * @property {accessToken} [accessToken] - access token; merged into `Authorization` when scoped for MCP
+ */
+
 function getNextFreePort (ports, initialPort) {
     if (initialPort === undefined) {
         initialPort = initialPortNumber
@@ -630,6 +642,107 @@ module.exports = {
             }
         })
     },
+
+    // #region MCP Support
+
+    // MCP ROUTE: step 4 (hosted)
+    // Called By: forge app (forge/containers/wrapper.js)
+    // Calls To : launchers `command` endpoint in lib/admin.js
+
+    /**
+     * Get MCP features
+     * @param {Project} project - the project model instance
+     * @param {Array<string|McpEndpointSpec>} endpoints - list of MCP endpoints to query.
+     *   Each entry may be a bare URL/path string, or an object `{ url, headers?, mcpAccessToken? }`
+     *   where `mcpAccessToken` is `{ scheme, token, scope }`.
+     * @returns {Object} MCP features
+     */
+    getMCPFeatures: async (project, endpoints) => {
+        const cachedProject = await this._projects.get(project.id)
+        if (cachedProject === undefined) {
+            throw new Error('Instance cannot get MCP features')
+        }
+        const port = await project.getSetting('port')
+        try {
+            const response = await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
+                json: {
+                    cmd: 'mcp:get-features',
+                    data: {
+                        endpoints
+                    }
+                }
+            }).json()
+            return response
+        } catch (error) {
+            throw new Error(`Failed to get MCP features: ${error.message}`)
+        }
+    },
+
+    /**
+     * Call MCP endpoint
+     * @param {Project} project - the project model instance
+     * @param {string|McpEndpointSpec} endpoint - MCP endpoint to call.
+     * @param {string} name - Name of the MCP tool to call
+     * @param {Object} input - Arguments to pass to the MCP tool
+     * @returns {Object} MCP tool result
+     */
+    callMCPTool: async (project, endpoint, name, input) => {
+        const cachedProject = await this._projects.get(project.id)
+        if (cachedProject === undefined) {
+            throw new Error('Instance cannot call MCP tool')
+        }
+
+        const port = await project.getSetting('port')
+        try {
+            const data = {
+                cmd: 'mcp:call-tool',
+                data: {
+                    endpoint,
+                    name,
+                    input
+                }
+            }
+            const json = JSON.parse(JSON.stringify(data))
+            const response = await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
+                json
+            }).json()
+            return response
+        } catch (error) {
+            throw new Error(`Failed to call MCP tool: ${error.message}`)
+        }
+    },
+
+    /**
+     * Read MCP resource
+     * @param {Project} project - the project model instance
+     * @param {string|McpEndpointSpec} endpoint - MCP endpoint to call.
+     * @param {string} uri - URI of the MCP resource to read
+     * @returns {Object} MCP resource result
+     */
+    readMCPResource: async (project, endpoint, uri) => {
+        const cachedProject = await this._projects.get(project.id)
+        if (cachedProject === undefined) {
+            throw new Error('Instance cannot read MCP resource')
+        }
+        const port = await project.getSetting('port')
+        try {
+            const response = await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
+                json: {
+                    cmd: 'mcp:read-resource',
+                    data: {
+                        endpoint,
+                        uri
+                    }
+                }
+            }).json()
+            return response
+        } catch (error) {
+            throw new Error(`Failed to read MCP resource: ${error.message}`)
+        }
+    },
+
+    // #endregion MCP Support
+
     /**
    * Logout Node-RED instance
    * @param {Project} project - the project model instance
