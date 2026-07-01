@@ -693,17 +693,15 @@ module.exports = {
 
         const port = await project.getSetting('port')
         try {
-            const data = {
-                cmd: 'mcp:call-tool',
-                data: {
-                    endpoint,
-                    name,
-                    input
-                }
-            }
-            const json = JSON.parse(JSON.stringify(data))
             const response = await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
-                json
+                json: {
+                    cmd: 'mcp:call-tool',
+                    data: {
+                        endpoint,
+                        name,
+                        input
+                    }
+                }
             }).json()
             return response
         } catch (error) {
