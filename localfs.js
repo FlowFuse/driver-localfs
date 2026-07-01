@@ -653,8 +653,7 @@ module.exports = {
      * Get MCP features
      * @param {Project} project - the project model instance
      * @param {Array<string|McpEndpointSpec>} endpoints - list of MCP endpoints to query.
-     *   Each entry may be a bare URL/path string, or an object `{ url, headers?, mcpAccessToken? }`
-     *   where `mcpAccessToken` is `{ scheme, token, scope }`.
+     *   Each entry may be a bare URL/path string, or an object `{ endpoint, headers?, accessToken? }`
      * @returns {Object} MCP features
      */
     getMCPFeatures: async (project, endpoints) => {
@@ -694,17 +693,15 @@ module.exports = {
 
         const port = await project.getSetting('port')
         try {
-            const data = {
-                cmd: 'mcp:call-tool',
-                data: {
-                    endpoint,
-                    name,
-                    input
-                }
-            }
-            const json = JSON.parse(JSON.stringify(data))
             const response = await got.post('http://localhost:' + (port + 1000) + '/flowforge/command', {
-                json
+                json: {
+                    cmd: 'mcp:call-tool',
+                    data: {
+                        endpoint,
+                        name,
+                        input
+                    }
+                }
             }).json()
             return response
         } catch (error) {
