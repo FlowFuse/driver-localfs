@@ -1,3 +1,15 @@
+#### 2.32.0: Release
+
+ - Sync changes to Insight support code across drivers (#330)
+ - feat: Add Insights support with get-features and call-tool/read-resource methods (#329)
+ - Bump actions/checkout from 6.0.3 to 7.0.0 (#328)
+ - ci: set dependabot pull request limit to 30 (#326)
+ - Bump hono from 4.12.23 to 4.12.25 (#325)
+ - Bump js-yaml from 4.1.1 to 4.2.0 (#324)
+ - Bump form-data from 4.0.5 to 4.0.6 (#323)
+ - Bump ws (#322)
+ - Bump actions/checkout from 6.0.2 to 6.0.3 (#317)
+
 #### 2.31.3: Release
 
 
