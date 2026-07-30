@@ -1,3 +1,10 @@
+#### 2.33.0: Release
+
+ - Bump actions/checkout from 7.0.0 to 7.0.1 (#335)
+ - Bump body-parser from 1.20.5 to 1.20.6 (#337)
+ - Bump actions/setup-node from 6.4.0 to 7.0.0 (#333)
+ - Bump fast-uri from 3.1.3 to 3.1.4 (#336)
+
 #### 2.32.1: Release
 
  - ci: Add slack notification to the release pipeline (#332)
