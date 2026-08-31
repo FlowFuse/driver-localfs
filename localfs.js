@@ -13,7 +13,7 @@
 const fs = require('fs/promises')
 const FormData = require('form-data')
 const { existsSync, openSync, close, readdirSync } = require('fs')
-const got = require('got')
+const got = require('got').extend({ retry: { limit: 0 } })
 const path = require('path')
 const semver = require('semver')
 const childProcess = require('child_process')
