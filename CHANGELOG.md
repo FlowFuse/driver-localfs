@@ -1,3 +1,7 @@
+#### 3.0.1: Release
+
+ - Disable got retries (#347)
+
 #### 3.0.0: Release
 
 
