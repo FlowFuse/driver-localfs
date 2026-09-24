@@ -1,3 +1,9 @@
+#### 3.1.0: Release
+
+ - Bump js-yaml from 4.3.1 to 4.3.2 (#352)
+ - Bump multer from 2.2.0 to 2.3.0 (#350)
+ - Bump @humanfs/node from 0.16.7 to 0.16.8 (#349)
+
 #### 3.0.2: Release
 
 
