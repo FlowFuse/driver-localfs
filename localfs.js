@@ -826,9 +826,9 @@ module.exports = {
         }
         const fileUrl = await getStaticFileUrl(instance, filePath)
         try {
-            return got.get(fileUrl).json()
+            return await got.get(fileUrl).json()
         } catch (err) {
-            err.statusCode = err.response.statusCode
+            err.statusCode = err.response?.statusCode
             throw err
         }
     },
@@ -840,11 +840,11 @@ module.exports = {
         }
         const fileUrl = await getStaticFileUrl(instance, filePath)
         try {
-            return got.put(fileUrl, {
+            return await got.put(fileUrl, {
                 json: update
             })
         } catch (err) {
-            err.statusCode = err.response.statusCode
+            err.statusCode = err.response?.statusCode
             throw err
         }
     },
@@ -856,9 +856,9 @@ module.exports = {
         }
         const fileUrl = await getStaticFileUrl(instance, filePath)
         try {
-            return got.delete(fileUrl)
+            return await got.delete(fileUrl)
         } catch (err) {
-            err.statusCode = err.response.statusCode
+            err.statusCode = err.response?.statusCode
             throw err
         }
     },
@@ -869,11 +869,11 @@ module.exports = {
         }
         const fileUrl = await getStaticFileUrl(instance, filePath)
         try {
-            return got.post(fileUrl, {
+            return await got.post(fileUrl, {
                 json: { path: directoryName }
             })
         } catch (err) {
-            err.statusCode = err.response.statusCode
+            err.statusCode = err.response?.statusCode
             throw err
         }
     },
@@ -886,11 +886,11 @@ module.exports = {
         form.append('file', fileBuffer, { filename: filePath })
         const fileUrl = await getStaticFileUrl(instance, filePath)
         try {
-            return got.post(fileUrl, {
+            return await got.post(fileUrl, {
                 body: form
             })
         } catch (err) {
-            err.statusCode = err.response.statusCode
+            err.statusCode = err.response?.statusCode
             throw err
         }
     },
