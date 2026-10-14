@@ -897,7 +897,7 @@ module.exports = {
 
     // Broker Agent API
     startBrokerAgent: async (broker) => {
-        launchMQTTAgent(broker, this)
+        await launchMQTTAgent(broker, this)
     },
     stopBrokerAgent: async (broker) => {
         const agent = broker.constructor.name === 'TeamBrokerAgent'
