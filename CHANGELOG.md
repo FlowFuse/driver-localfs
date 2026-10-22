@@ -1,3 +1,13 @@
+#### 3.2.0: Release
+
+ - Bump qs, body-parser and express (#366)
+ - Bump actions/setup-node from 7.0.0 to 7.1.0 (#364)
+ - Bump actions/create-github-app-token from 3.2.0 to 3.3.0 (#365)
+ - Wait for the broker schema agent to launch in startBrokerAgent (#363)
+ - Bump @modelcontextprotocol/sdk from 1.30.1 to 1.32.1 (#361)
+ - Bump brace-expansion (#360)
+ - Bump proxy-addr from 2.0.7 to 2.0.8 (#359)
+
 #### 3.1.1: Release
 
  - Await file requests so launcher errors keep their status code (#357)
