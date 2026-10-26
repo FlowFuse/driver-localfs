@@ -24,7 +24,7 @@
         "@flowfuse/mqtt-schema-agent": "^1.1.1",
         "@flowfuse/nr-launcher": "^3.2.0",
         "form-data": "^4.0.0",
-        "got": "^11.8.5",
+        "got": "^16.1.0",
         "semver": "~7.6.0",
         "ws": "^8.18.2"
     },
