@@ -1,3 +1,13 @@
+#### 3.3.0: Release
+
+ - Bump hono from 4.13.13 to 4.13.18 (#384)
+ - Bump semver from 7.6.3 to 7.8.6 (#382)
+ - Bump ws from 8.21.0 to 8.22.1 (#380)
+ - Bump multer from 2.4.0 to 2.5.0 (#377)
+ - Bump ip-address from 10.7.2 to 10.7.5 (#379)
+ - Bump body-parser (#378)
+ - chore: Group dev dependabot (#369)
+
 #### 3.2.0: Release
 
  - Bump qs, body-parser and express (#366)
