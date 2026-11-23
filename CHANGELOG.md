@@ -1,3 +1,8 @@
+#### 3.3.1: Release
+
+ - Bump minimatch, @typescript-eslint/utils and typescript-eslint (#386)
+ - Bump ws from 8.22.1 to 8.23.0 (#385)
+
 #### 3.3.0: Release
 
  - Bump hono from 4.13.13 to 4.13.18 (#384)
