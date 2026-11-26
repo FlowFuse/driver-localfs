@@ -1,3 +1,7 @@
+#### 3.3.2: Release
+
+ - Bump actions/create-github-app-token from 3.3.0 to 3.4.0 (#389)
+
 #### 3.3.1: Release
 
  - Bump minimatch, @typescript-eslint/utils and typescript-eslint (#386)
